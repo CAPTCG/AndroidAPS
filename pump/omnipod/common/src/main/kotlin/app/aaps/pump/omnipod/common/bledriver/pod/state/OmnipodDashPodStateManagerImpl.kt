@@ -2,8 +2,6 @@ package app.aaps.pump.omnipod.common.bledriver.pod.state
 
 import android.os.SystemClock
 import app.aaps.core.data.model.BS
-import app.aaps.core.interfaces.configuration.Config
-import app.aaps.core.interfaces.configuration.ExternalOptions
 import app.aaps.core.interfaces.logging.AAPSLogger
 import app.aaps.core.interfaces.logging.LTag
 import app.aaps.core.interfaces.rx.bus.RxBus
@@ -45,12 +43,10 @@ import javax.inject.Singleton
 class OmnipodDashPodStateManagerImpl @Inject constructor(
     private val logger: AAPSLogger,
     private val rxBus: RxBus,
-    private val preferences: Preferences,
-    private val config: Config
+    private val preferences: Preferences
 ) : OmnipodDashPodStateManager {
 
-    /** Internal (rather than private) to allow unit testing within this module. */
-    internal var podState: PodState
+    private var podState: PodState
 
     init {
         podState = load()
@@ -263,24 +259,9 @@ class OmnipodDashPodStateManagerImpl @Inject constructor(
         // Compute drift (actual - expected: positive = over-delivery, negative = under-delivery)
         get() = basalDelivered - (podState.basalExpected ?: basalDelivered)
 
-    /**
-     * Integrates expected basal delivery (in units) over [startTime, endTime].
-     * Internal (rather than private) to allow unit testing within this module.
-     */
-    internal fun integrateExpectedDelivery(
-        startTime: Long,
-        endTime: Long,
-        timeZoneOffset: Int?,
-        tempBasal: OmnipodDashPodStateManager.TempBasal?,
-        basalProgram: BasalProgram?
-    ): Double? {
+    private fun integrateExpectedDelivery(startTime: Long, endTime: Long): Double? {
         logger.debug(LTag.PUMP, "integrateExpectedDelivery: period ${(endTime - startTime) / 1000.0}s")
-
-        if (timeZoneOffset == null) {
-            logger.error(LTag.PUMP, "integrateExpectedDelivery: pod timezone unknown, skipping")
-            return null
-        }
-
+        
         // Validate time period
         if (startTime > endTime) {
             logger.error(LTag.PUMP, "Invalid time period: startTime=$startTime > endTime=$endTime")
@@ -301,7 +282,7 @@ class OmnipodDashPodStateManagerImpl @Inject constructor(
         // Add basal program segment boundaries
         basalProgram?.segments?.forEach { segment ->
             // Calculate day boundaries in pod's local timezone, not UTC
-
+            val timeZoneOffset = podState.timeZoneOffset ?: 0
             val dayStartLocal = ((startTime + timeZoneOffset) / 86400_000L) * 86400_000L - timeZoneOffset
             var segmentStart = dayStartLocal + segment.startSlotIndex.toLong() * 30 * 60_000L
             
@@ -316,10 +297,6 @@ class OmnipodDashPodStateManagerImpl @Inject constructor(
                 segmentStart += 86400_000L
             }
         }
-
-        // Offset to convert UTC epoch to pod-local time for rateAt (which uses device timezone internally)
-        val deviceOffsetMs = TimeZone.getDefault().getOffset(startTime)
-        val podTimeAdjustmentMs = timeZoneOffset - deviceOffsetMs
         
         // Integrate over each segment
         return boundaries.sorted().windowed(2).mapIndexed { index, (boundaryStart, boundaryEnd) ->
@@ -330,7 +307,7 @@ class OmnipodDashPodStateManagerImpl @Inject constructor(
             val rate = tempBasal?.let { tb ->
                 val tempBasalEnd = tb.startTime + tb.durationInMinutes * 60_000L
                 tb.rate.takeIf { segmentMid in tb.startTime until tempBasalEnd }
-            } ?: basalProgram?.rateAt(segmentMid + podTimeAdjustmentMs) ?: return null  // Abort if rate unknown
+            } ?: basalProgram?.rateAt(segmentMid) ?: return null  // Abort if rate unknown
             
             val delivery = rate * segmentHours
             
@@ -345,8 +322,6 @@ class OmnipodDashPodStateManagerImpl @Inject constructor(
     }
 
     override fun needsBasalCorrection(): Boolean {
-        if (!config.isEnabled(ExternalOptions.ENABLE_OMNIPOD_DRIFT_COMPENSATION)) return false  // Semaphore file check
-
         val correctionThreshold = -PodConstants.POD_PULSE_BOLUS_UNITS / 2  // -0.025U
         
         if (!isActivationCompleted) return false  // Don't correct during activation/priming
@@ -360,9 +335,7 @@ class OmnipodDashPodStateManagerImpl @Inject constructor(
         // Compute drift once for efficiency
         val drift = basalDrift
 
-        // Reset if drift exceeds boundaries (over-delivery or severe under-delivery).
-        // Thresholds are intentionally tight: a reset is preferred over risking over-correction.
-        // Even so, reaching this point is genuinely exceptional and has not been observed in practice; widen if needed.
+        // Reset if drift exceeds boundaries (over-delivery or severe under-delivery)
         if (drift >= PodConstants.POD_PULSE_BOLUS_UNITS * 2 || drift <= -PodConstants.POD_PULSE_BOLUS_UNITS * 2) {
             logger.warn(
                 LTag.PUMP,
@@ -726,8 +699,7 @@ class OmnipodDashPodStateManagerImpl @Inject constructor(
         store()
     }
 
-    /** Internal (rather than private) to allow unit testing within this module. */
-    internal fun calculateBolusPulseIncrease(
+    private fun calculateBolusPulseIncrease(
         previousTotalPulses: Short,
         newTotalPulses: Short,
         previousBolusPulsesRemaining: Short?,
@@ -763,7 +735,6 @@ class OmnipodDashPodStateManagerImpl @Inject constructor(
     }
 
     override fun onStart() {
-        logger.info(LTag.PUMP, "Omnipod Dash drift compensation: ${if (config.isEnabled(ExternalOptions.ENABLE_OMNIPOD_DRIFT_COMPENSATION)) "enabled" else "disabled"}")
         when (getCommandConfirmationFromState()) {
             CommandConfirmationSuccess, CommandConfirmationDenied -> {
                 val now = SystemClock.elapsedRealtime()
@@ -792,8 +763,7 @@ class OmnipodDashPodStateManagerImpl @Inject constructor(
         }
     }
 
-    /** Internal (rather than private) to allow unit testing within this module. */
-    internal fun updatePodState(
+    private fun updatePodState(
         deliveryStatus: DeliveryStatus,
         podStatus: PodStatus,
         totalPulsesDelivered: Short,
@@ -815,13 +785,9 @@ class OmnipodDashPodStateManagerImpl @Inject constructor(
 
         // Update basal expected delivery
         podState.basalExpected = podState.basalExpected?.let {
-            integrateExpectedDelivery(
-                startTime = podState.lastUpdatedSystem,
-                endTime = now,
-                timeZoneOffset = podState.timeZoneOffset,
-                tempBasal = tempBasal,
-                basalProgram = basalProgram
-            )?.let { delta -> it + delta }
+            integrateExpectedDelivery(podState.lastUpdatedSystem, now)?.let { delta ->
+                it + delta
+            }
         } ?: basalDelivered.takeIf { isActivationCompleted }
         
         // Update bolus pulses delivered (exclude basal corrections)
