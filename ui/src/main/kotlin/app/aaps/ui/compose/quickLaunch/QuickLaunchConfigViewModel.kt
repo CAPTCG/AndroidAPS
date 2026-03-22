@@ -10,6 +10,7 @@ import app.aaps.core.interfaces.profile.LocalProfileManager
 import app.aaps.core.keys.StringNonKey
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.objects.wizard.QuickWizard
+import app.aaps.ui.compose.scenes.SceneRepository
 import app.aaps.ui.compose.tempTarget.toTTPresets
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +26,7 @@ data class QuickLaunchConfigUiState(
     val availableAutomationItems: List<ResolvedQuickLaunchItem> = emptyList(),
     val availableTtPresetItems: List<ResolvedQuickLaunchItem> = emptyList(),
     val availableProfileItems: List<ResolvedQuickLaunchItem> = emptyList(),
+    val availableSceneItems: List<ResolvedQuickLaunchItem> = emptyList(),
     val availablePluginGroups: List<PluginGroup> = emptyList()
 )
 
@@ -43,6 +45,7 @@ class QuickLaunchConfigViewModel @Inject constructor(
     private val automation: Automation,
     private val activePlugin: ActivePlugin,
     private val localProfileManager: LocalProfileManager,
+    private val sceneRepository: SceneRepository,
     private val resolver: QuickLaunchResolver
 ) : ViewModel() {
 
@@ -89,6 +92,12 @@ class QuickLaunchConfigViewModel @Inject constructor(
             .map { QuickLaunchAction.ProfileAction(it.toString()) }
             .map { resolver.resolveItem(it) }
 
+        // Available Scenes
+        val availableScenes = sceneRepository.getScenes()
+            .map { QuickLaunchAction.SceneAction(it.id) }
+            .filter { actionKey(it) !in selectedSet }
+            .map { resolver.resolveItem(it) }
+
         // Available Plugins — enabled with compose content, grouped by PluginType
         val pluginGroups = buildPluginGroups(selectedSet)
 
@@ -100,6 +109,7 @@ class QuickLaunchConfigViewModel @Inject constructor(
                 availableAutomationItems = availableAuto,
                 availableTtPresetItems = availableTt,
                 availableProfileItems = availableProfiles,
+                availableSceneItems = availableScenes,
                 availablePluginGroups = pluginGroups
             )
         }
@@ -152,7 +162,7 @@ class QuickLaunchConfigViewModel @Inject constructor(
 
     private fun buildPluginGroups(selectedSet: Set<String>): List<PluginGroup> {
         val typeOrder = listOf(
-            PluginType.PUMP, PluginType.BGSOURCE, PluginType.APS,
+            PluginType.PUMP, PluginType.BGSOURCE, PluginType.LOOP, PluginType.APS,
             PluginType.SENSITIVITY, PluginType.INSULIN, PluginType.SMOOTHING,
             PluginType.SYNC, PluginType.GENERAL
         )
@@ -160,6 +170,7 @@ class QuickLaunchConfigViewModel @Inject constructor(
             PluginType.PUMP to app.aaps.core.ui.R.string.configbuilder_pump,
             PluginType.BGSOURCE to app.aaps.core.ui.R.string.configbuilder_bgsource,
             PluginType.APS to app.aaps.core.ui.R.string.configbuilder_aps,
+            PluginType.LOOP to app.aaps.core.ui.R.string.configbuilder_loop,
             PluginType.SENSITIVITY to app.aaps.core.ui.R.string.configbuilder_sensitivity,
             PluginType.INSULIN to app.aaps.core.ui.R.string.configbuilder_insulin,
             PluginType.SMOOTHING to app.aaps.core.ui.R.string.configbuilder_smoothing,

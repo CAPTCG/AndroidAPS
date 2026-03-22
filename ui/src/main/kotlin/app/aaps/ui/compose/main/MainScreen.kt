@@ -36,6 +36,7 @@ import app.aaps.ui.compose.alertDialogs.AboutDialogData
 import app.aaps.ui.compose.maintenance.ImportSource
 import app.aaps.ui.compose.maintenance.MaintenanceDialogs
 import app.aaps.ui.compose.maintenance.MaintenanceViewModel
+import app.aaps.core.data.model.ActiveSceneState
 import app.aaps.ui.compose.overview.OverviewScreen
 import app.aaps.ui.compose.automationSheet.AutomationBottomSheet
 import app.aaps.ui.compose.automationSheet.AutomationViewModel
@@ -109,6 +110,7 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     var showTreatmentSheet by remember { mutableStateOf(false) }
     var showAutomationSheet by remember { mutableStateOf(false) }
+    val automationState by automationViewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Sync drawer state with ui state
@@ -172,7 +174,7 @@ fun MainScreen(
                         automationViewModel.refreshState()
                         showAutomationSheet = true
                     },
-                    automationCount = automationViewModel.uiState.collectAsStateWithLifecycle().value.items.size,
+                    automationCount = automationState.items.size + automationState.sceneItems.size,
                     pumpSetupClassName = pumpSetupClassName,
                     pumpSetupIcon = pumpSetupIcon,
                     pumpSetupLabel = pumpSetupLabel,
@@ -183,6 +185,8 @@ fun MainScreen(
             },
         ) { paddingValues ->
             val hasToolbar = quickLaunchItems.isNotEmpty()
+            val activeSceneState by mainViewModel.activeSceneState.collectAsStateWithLifecycle()
+            val sceneExpired by mainViewModel.sceneExpired.collectAsStateWithLifecycle()
             Box(modifier = Modifier.fillMaxSize()) {
                 OverviewScreen(
                     profileName = uiState.profileName,
@@ -207,6 +211,11 @@ fun MainScreen(
                     onNotificationActionClick = onNotificationActionClick,
                     autoShowNotificationSheet = autoShowNotificationSheet,
                     onAutoShowConsumed = onAutoShowConsumed,
+                    activeSceneState = activeSceneState,
+                    sceneExpired = sceneExpired,
+                    onEndScene = { mainViewModel.requestSceneDeactivation() },
+                    onDismissScene = { mainViewModel.dismissExpiredScene() },
+                    formatDuration = mainViewModel::formatDuration,
                     paddingValues = paddingValues,
                     fabBottomOffset = if (hasToolbar) 56.dp else 0.dp
                 )
@@ -278,11 +287,12 @@ fun MainScreen(
 
     // Automation bottom sheet
     if (showAutomationSheet) {
-        val automationState by automationViewModel.uiState.collectAsStateWithLifecycle()
         AutomationBottomSheet(
             onDismiss = { showAutomationSheet = false },
             automationItems = automationState.items,
-            onItemClick = { item -> mainViewModel.requestAutomationConfirmation(item.eventId) }
+            onItemClick = { item -> mainViewModel.requestAutomationConfirmation(item.eventId) },
+            sceneItems = automationState.sceneItems,
+            onSceneClick = { sceneId -> mainViewModel.requestSceneConfirmation(sceneId) }
         )
     }
 

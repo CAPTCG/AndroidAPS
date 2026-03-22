@@ -54,7 +54,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.aaps.core.data.model.RM
+import app.aaps.core.data.model.ActiveSceneState
 import app.aaps.core.data.model.TT
+import app.aaps.ui.compose.scenes.ActiveSceneBanner
 import app.aaps.core.interfaces.notifications.AapsNotification
 import app.aaps.core.ui.compose.AapsTheme
 import app.aaps.core.ui.compose.LocalConfig
@@ -107,6 +109,11 @@ fun OverviewScreen(
     onNotificationActionClick: (AapsNotification) -> Unit,
     autoShowNotificationSheet: Boolean,
     onAutoShowConsumed: () -> Unit,
+    activeSceneState: ActiveSceneState? = null,
+    sceneExpired: Boolean = false,
+    onEndScene: () -> Unit = {},
+    onDismissScene: () -> Unit = {},
+    formatDuration: (Long) -> String = { ms -> "${(ms / 60000L).toInt()}m" },
     paddingValues: PaddingValues,
     fabBottomOffset: Dp = 0.dp,
     modifier: Modifier = Modifier
@@ -144,6 +151,14 @@ fun OverviewScreen(
                         .height(4.dp),
                 )
             }
+            // Active scene banner
+            ActiveSceneBanner(
+                activeState = activeSceneState,
+                expired = sceneExpired,
+                onEndClick = onEndScene,
+                onDismiss = onDismissScene,
+                formatDuration = formatDuration
+            )
             // BG Info and Chips in a row
             Row(
                 modifier = Modifier

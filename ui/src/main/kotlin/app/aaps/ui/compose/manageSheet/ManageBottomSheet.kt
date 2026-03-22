@@ -159,6 +159,12 @@ internal fun ManageBottomSheetContent(
         )
 
         ManageItem(
+            elementType = ElementType.SCENE_MANAGEMENT,
+            onDismiss = onDismiss,
+            onNavigate = onNavigate
+        )
+
+        ManageItem(
             elementType = ElementType.SITE_ROTATION,
             onDismiss = onDismiss,
             onNavigate = onNavigate

@@ -13,6 +13,7 @@ import app.aaps.core.interfaces.plugin.ActivePlugin
 import app.aaps.core.interfaces.profile.ProfileFunction
 import app.aaps.core.interfaces.rx.bus.RxBus
 import app.aaps.core.interfaces.rx.events.EventRefreshOverview
+import app.aaps.ui.compose.scenes.SceneRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,8 +35,16 @@ data class AutomationActionItem(
 )
 
 @Immutable
+data class SceneSheetItem(
+    val id: String,
+    val name: String,
+    val actionCount: Int
+)
+
+@Immutable
 data class AutomationUiState(
-    val items: List<AutomationActionItem> = emptyList()
+    val items: List<AutomationActionItem> = emptyList(),
+    val sceneItems: List<SceneSheetItem> = emptyList()
 )
 
 @HiltViewModel
@@ -46,7 +55,8 @@ class AutomationViewModel @Inject constructor(
     private val loop: Loop,
     private val profileFunction: ProfileFunction,
     private val config: Config,
-    private val rxBus: RxBus
+    private val rxBus: RxBus,
+    private val sceneRepository: SceneRepository
 ) : ViewModel() {
 
     val uiState: StateFlow<AutomationUiState>
@@ -69,7 +79,7 @@ class AutomationViewModel @Inject constructor(
 
             val isSuspended = loop.runningMode.isSuspended()
             if (isSuspended || !pump.isInitialized() || profile == null || config.isEnabled(ExternalOptions.SHOW_USER_ACTIONS_ON_WATCH_ONLY)) {
-                uiState.update { it.copy(items = emptyList()) }
+                uiState.update { it.copy(items = emptyList(), sceneItems = emptyList()) }
                 return@launch
             }
 
@@ -86,7 +96,14 @@ class AutomationViewModel @Inject constructor(
                     actionIconResIds = event.actionIcons().toList()
                 )
             }
-            uiState.update { it.copy(items = items) }
+            val scenes = sceneRepository.getScenes().map { scene ->
+                SceneSheetItem(
+                    id = scene.id,
+                    name = scene.name,
+                    actionCount = scene.actions.size
+                )
+            }
+            uiState.update { it.copy(items = items, sceneItems = scenes) }
         }
     }
 
