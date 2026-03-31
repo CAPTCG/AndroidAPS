@@ -414,7 +414,8 @@ class OverviewDataCacheImpl @Inject constructor(
                 state = TempTargetState.ACTIVE,
                 timestamp = tempTarget.timestamp,
                 duration = tempTarget.duration,
-                reason = tempTarget.reason
+                reason = tempTarget.reason,
+                recordId = tempTarget.id
             )
         } else {
             // No active TT - check profile
@@ -452,12 +453,14 @@ class OverviewDataCacheImpl @Inject constructor(
     private suspend fun updateProfileFromDatabase() {
         val profile = profileFunction.getProfile()
         var isModified = false
+        var percentage = 100
         var timestamp = 0L
         var duration = 0L
 
         if (profile is ProfileSealed.EPS) {
             val eps = profile.value
             isModified = eps.originalPercentage != 100 || eps.originalTimeshift != 0L || eps.originalDuration != 0L
+            percentage = eps.originalPercentage
             timestamp = eps.timestamp
             duration = eps.originalDuration
         }
@@ -466,6 +469,7 @@ class OverviewDataCacheImpl @Inject constructor(
             profileName = profileFunction.getProfileName(),  // Raw name, ViewModel adds remaining time
             isLoaded = profile != null,
             isModified = isModified,
+            percentage = percentage,
             timestamp = timestamp,
             duration = duration
         )
@@ -483,7 +487,8 @@ class OverviewDataCacheImpl @Inject constructor(
         _runningModeFlow.value = RunningModeDisplayData(
             mode = mode,
             timestamp = rmRecord.timestamp,
-            duration = rmRecord.duration
+            duration = rmRecord.duration,
+            recordId = rmRecord.id
         )
     }
 

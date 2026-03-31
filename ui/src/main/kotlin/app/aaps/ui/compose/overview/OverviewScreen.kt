@@ -53,8 +53,9 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.aaps.core.data.model.RM
 import app.aaps.core.data.model.ActiveSceneState
+import app.aaps.core.data.model.RM
+import app.aaps.core.data.model.SceneAction
 import app.aaps.core.data.model.TT
 import app.aaps.ui.compose.scenes.ActiveSceneBanner
 import app.aaps.core.interfaces.notifications.AapsNotification
@@ -88,15 +89,19 @@ import app.aaps.ui.compose.overview.statusLights.StatusViewModel
 @Composable
 fun OverviewScreen(
     profileName: String,
+    rawProfileName: String = "",
+    profilePercentage: Int = 100,
     isProfileModified: Boolean,
     profileProgress: Float,
     tempTargetText: String,
     tempTargetState: TempTargetChipState,
     tempTargetProgress: Float,
     tempTargetReason: TT.Reason?,
+    tempTargetRecordId: Long = 0,
     runningMode: RM.Mode,
     runningModeText: String,
     runningModeProgress: Float,
+    runningModeRecordId: Long = 0,
     isSimpleMode: Boolean,
     calcProgress: Int,
     graphViewModel: GraphViewModel,
@@ -208,6 +213,7 @@ fun OverviewScreen(
                                 text = runningModeText,
                                 progress = runningModeProgress,
                                 modifier = Modifier.weight(1f),
+                                sceneManaged = activeSceneState?.priorState?.sceneRunningModeId?.let { it == runningModeRecordId && it > 0 } == true,
                                 onClick = { onNavigate(NavigationRequest.Element(ElementType.RUNNING_MODE)) }
                             )
                             if (isSimpleMode) {
@@ -228,7 +234,13 @@ fun OverviewScreen(
                             profileName = profileName,
                             isModified = isProfileModified,
                             progress = profileProgress,
-                            onClick = { onNavigate(NavigationRequest.Element(ElementType.PROFILE_MANAGEMENT)) }
+                            onClick = { onNavigate(NavigationRequest.Element(ElementType.PROFILE_MANAGEMENT)) },
+                            sceneManaged = activeSceneState?.scene?.actions
+                                ?.filterIsInstance<SceneAction.ProfileSwitch>()
+                                ?.any { action ->
+                                    val expectedName = action.profileName.ifEmpty { activeSceneState.priorState.profileName ?: "" }
+                                    rawProfileName == expectedName && profilePercentage == action.percentage
+                                } == true
                         )
                     }
                     // TempTarget chip (show when text is available)
@@ -238,7 +250,8 @@ fun OverviewScreen(
                             state = tempTargetState,
                             progress = tempTargetProgress,
                             reason = tempTargetReason,
-                            onClick = { onNavigate(NavigationRequest.Element(ElementType.TEMP_TARGET_MANAGEMENT)) }
+                            onClick = { onNavigate(NavigationRequest.Element(ElementType.TEMP_TARGET_MANAGEMENT)) },
+                            sceneManaged = activeSceneState?.priorState?.sceneTtId?.let { it == tempTargetRecordId && it > 0 } == true
                         )
                     }
                     // IOB + COB chips row

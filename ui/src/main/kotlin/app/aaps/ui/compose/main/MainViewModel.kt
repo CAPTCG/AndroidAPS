@@ -198,15 +198,19 @@ class MainViewModel @Inject constructor(
                     else ttData?.state?.toChipState() ?: TempTargetChipState.None,
                     tempTargetProgress = ttProgress,
                     tempTargetReason = if (ttExpired) null else ttData?.reason,
+                    tempTargetRecordId = if (ttExpired) 0 else ttData?.recordId ?: 0,
                     // Profile state
                     isProfileLoaded = profileData?.isLoaded ?: false,
                     profileName = profileText,
+                    rawProfileName = profileData?.profileName ?: "",
+                    profilePercentage = profileData?.percentage ?: 100,
                     isProfileModified = profileData?.isModified ?: false,
                     profileProgress = profileProgress,
                     // Running mode state
                     runningMode = rmData?.mode ?: RM.Mode.DISABLED_LOOP,
                     runningModeText = rmText,
                     runningModeProgress = rmProgress,
+                    runningModeRecordId = rmData?.recordId ?: 0,
                     // QuickWizard state
                     quickWizardItems = qwItems
                 )
