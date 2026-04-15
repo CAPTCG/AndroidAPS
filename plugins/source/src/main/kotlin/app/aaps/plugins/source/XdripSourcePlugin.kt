@@ -67,6 +67,8 @@ class XdripSourcePlugin @Inject constructor(
             SourceSensor.LIBRE_2_NATIVE,
             SourceSensor.LIBRE_3,
             SourceSensor.EVERSENSE,
+            SourceSensor.EVERSENSE_E3,
+            SourceSensor.EVERSENSE_365,
         ).any { it == glucoseValue.sourceSensor }
     }
 
