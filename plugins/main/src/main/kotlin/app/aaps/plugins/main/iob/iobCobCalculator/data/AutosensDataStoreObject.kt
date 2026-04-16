@@ -191,7 +191,9 @@ class AutosensDataStoreObject : AutosensDataStore {
                 if (diff > T.mins(2).plus(T.secs(30)).msecs()) diff -= T.mins(5).msecs()
                 totalDiff += diff
                 diff = abs(diff)
-                if (diff > T.secs(IRREGULAR_DATA_SEC).msecs()) {
+                // Eversense has up to +-60s jitter on 5-min intervals; all other sensors use +-30s
+                val jitterThresholdSecs = if (isEversense) 60L else IRREGULAR_DATA_SEC
+                if (diff > T.secs(jitterThresholdSecs).msecs()) {
                     aapsLogger.debug(LTag.AUTOSENS, "Interval detection: values: ${bgReadings.size} diff: ${diff / 1000}[s] is5minData: false")
                     return false
                 }
