@@ -160,6 +160,14 @@ class AutosensDataStoreObject : AutosensDataStore {
             referenceTime = someTime
             return someTime
         }
+        // If the gap between someTime and referenceTime is larger than 10 minutes
+        // (e.g. after an Eversense charging break), reset referenceTime so the
+        // normalization adjustment stays within bounds and doesn't trigger the fallback.
+        val gapFromReference = abs(someTime - referenceTime)
+        if (gapFromReference > T.mins(10).msecs()) {
+            referenceTime = someTime
+            return someTime
+        }
         var diff = abs(someTime - referenceTime)
         diff %= T.mins(5).msecs()
         return if (diff > T.mins(2).plus(T.secs(30)).msecs()) someTime + abs(diff - T.mins(5).msecs()) // Adjust to the future
