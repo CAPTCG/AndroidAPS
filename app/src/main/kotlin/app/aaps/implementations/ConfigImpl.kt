@@ -74,4 +74,6 @@ class ConfigImpl @Inject constructor(
         enabledOptionsCache.getOrPut(option) {
             fileListProvider.get().ensureExtraDirExists()?.findFile(option.filename) != null
         }
+    override fun enableOmnipodDriftCompensation(): Boolean = isEnabled(ExternalOptions.OMNIPOD_DRIFT_COMPENSATION)
 }
+
