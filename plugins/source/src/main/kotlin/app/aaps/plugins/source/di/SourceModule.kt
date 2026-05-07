@@ -14,14 +14,9 @@ import app.aaps.plugins.source.PoctechPlugin
 import app.aaps.plugins.source.SyaiPlugin
 import app.aaps.plugins.source.TomatoPlugin
 import app.aaps.plugins.source.XdripSourcePlugin
-<<<<<<< HEAD
-=======
-import app.aaps.plugins.source.activities.RequestDexcomPermissionActivity
-import app.aaps.plugins.source.EversensePlugin
-import app.aaps.plugins.source.activities.EversenseStatusActivity
->>>>>>> e68d28db2f (Add EversenseStatusActivity, fix plugin registration, add credentials and calibration preferences)
 import app.aaps.plugins.source.activities.EversenseCalibrationActivity
 import app.aaps.plugins.source.activities.EversensePlacementActivity
+import app.aaps.plugins.source.activities.EversenseStatusActivity
 import app.aaps.plugins.source.activities.RequestDexcomPermissionActivity
 import app.aaps.plugins.source.activities.RequestEversensePermissionActivity
 import app.aaps.plugins.source.instara.InstaraPlugin
