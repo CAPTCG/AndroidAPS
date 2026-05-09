@@ -1,4 +1,4 @@
-﻿package com.nightscout.eversense.models
+package com.nightscout.eversense.models
 
 import com.nightscout.eversense.enums.CalibrationMode
 import com.nightscout.eversense.enums.CalibrationPhase
@@ -8,7 +8,6 @@ import kotlinx.serialization.Serializable
 @Serializable
 class EversenseState {
     var lastSync: Long = 0
-    var useSmoothing: Boolean = false
     var insertionDate: Long = 0
     var calibrationPhase: CalibrationPhase = CalibrationPhase.UNKNOWN
     var calibrationReadiness: CalibrationReadiness = CalibrationReadiness.UNKNOWN
@@ -48,3 +47,4 @@ class EversenseTransmitterSettings {
     var predictiveLowAlarmThreshold: Int = 70
     var predictiveLowAlarmMinutes: Int = 5
 }
+

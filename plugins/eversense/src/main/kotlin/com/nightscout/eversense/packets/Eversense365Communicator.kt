@@ -1,4 +1,4 @@
-﻿package com.nightscout.eversense.packets
+package com.nightscout.eversense.packets
 
 import android.content.SharedPreferences
 import android.os.Handler
@@ -38,7 +38,6 @@ import com.nightscout.eversense.packets.e365.GetGlucoseDataPacket
 import com.nightscout.eversense.packets.e365.GetPatientSettingsPacket
 import com.nightscout.eversense.packets.e365.GetSensorInformationPacket
 import com.nightscout.eversense.packets.e365.SetCurrentDateTimePacket
-import com.nightscout.eversense.util.EselSmoothing
 import com.nightscout.eversense.util.EversenseLogger
 import com.nightscout.eversense.util.StorageKeys
 import kotlinx.serialization.json.Json
@@ -68,9 +67,6 @@ class Eversense365Communicator {
             }
 
             var currentGlucose = glucoseData.glucoseInMgDl
-            if (state.useSmoothing && state.recentGlucoseValue > 0 && state.lastGlucoseRaw > 0) {
-                currentGlucose = EselSmoothing.smooth(currentGlucose, state.recentGlucoseValue, state.lastGlucoseRaw)
-            }
 
             val result = mutableListOf<EversenseCGMResult>()
             val previousGlucoseDatetime = state.recentGlucoseDatetime
@@ -227,3 +223,4 @@ class Eversense365Communicator {
         }
     }
 }
+

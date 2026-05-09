@@ -68,7 +68,6 @@
     <string name="eversense_sign_out">Sign out</string>
     <string name="eversense_credentials_missing">Eversense 365: credentials not set — please sign in to enable cloud sync and readings</string>
     <string name="eversense_status_title">Eversense Status &amp; Connection</string>
-    <string name="eversense_use_smoothing">Use ESEL Smoothing</string>
     <string name="eversense_cloud_upload_enabled">Enable Eversense cloud upload</string>
     <string name="eversense_cloud_upload_toast">Show cloud upload result</string>
     <!-- Credentials section for Eversense 365 DMS login -->
@@ -122,6 +121,7 @@
     <string name="eversense_transmitter_not_placed_summary">Make sure the transmitter is placed directly over the sensor site and secured with the adhesive patch.</string>
     <string name="eversense_reconnecting">Reconnecting…</string>
 </resources>
+
 
 
 

@@ -187,7 +187,6 @@ class EversensePlugin @Inject constructor(
         titleResId = R.string.source_eversense,
         items = listOf(
             EversenseIntentKey.EversenseStatus.withActivity(EversenseStatusActivity::class.java),
-            BooleanKey.EversenseUseSmoothing,
             BooleanKey.EversenseCloudUploadEnabled,
             PreferenceSubScreenDef(
                 key = "eversense_credentials_screen",
@@ -535,6 +534,7 @@ class EversensePlugin @Inject constructor(
         private val eversense get() = EversenseCGMPlugin.instance
     }
 }
+
 
 
 

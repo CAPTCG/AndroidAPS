@@ -60,7 +60,6 @@ import com.nightscout.eversense.packets.e3.SetSettingRateFallingThresholdPacket
 import com.nightscout.eversense.packets.e3.SetSettingRateRisingEnabledPacket
 import com.nightscout.eversense.packets.e3.SetSettingRateRisingThresholdPacket
 import com.nightscout.eversense.packets.e3.SetSettingVibratePacket
-import com.nightscout.eversense.util.EselSmoothing
 import com.nightscout.eversense.util.EversenseLogger
 import com.nightscout.eversense.util.StorageKeys
 import kotlinx.serialization.json.Json
@@ -96,9 +95,6 @@ class EversenseE3Communicator {
                 }
 
                 var currentGlucose = glucoseData.glucoseInMgDl
-                if (state.useSmoothing && state.recentGlucoseValue > 0 && state.lastGlucoseRaw > 0) {
-                    currentGlucose = EselSmoothing.smooth(currentGlucose, state.recentGlucoseValue, state.lastGlucoseRaw)
-                }
 
                 val result = mutableListOf<EversenseCGMResult>()
                 state.recentGlucoseDatetime = glucoseData.datetime
@@ -298,3 +294,4 @@ class EversenseE3Communicator {
         }
     }
 }
+

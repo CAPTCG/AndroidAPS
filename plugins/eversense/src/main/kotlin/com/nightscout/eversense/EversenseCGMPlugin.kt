@@ -50,17 +50,6 @@ class EversenseCGMPlugin {
         gattCallback = EversenseGattCallback(this, preference)
     }
 
-    fun setSmoothing(value: Boolean): Boolean {
-        val state = getCurrentState() ?: run {
-            EversenseLogger.error(TAG, "Cannot set smoothing: current state is null. Has setContext been called?")
-            return false
-        }
-        state.useSmoothing = value
-        preferences?.edit(commit = true) {
-            putString(StorageKeys.STATE, JSON.encodeToString(state))
-        }
-        return true
-    }
 
     fun addWatcher(watcher: EversenseWatcher) {
         this.watchers += watcher
@@ -354,6 +343,7 @@ class EversenseCGMPlugin {
         }
     }
 }
+
 
 
 
