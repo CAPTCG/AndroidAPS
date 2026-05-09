@@ -1,6 +1,5 @@
 package app.aaps.pump.omnipod.common.bledriver.pod.state
 
-import app.aaps.core.interfaces.configuration.Config
 import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.shared.tests.TestBase
 import com.google.common.truth.Truth.assertThat
@@ -21,12 +20,11 @@ import org.mockito.Mock
 class CalculateBolusPulseIncreaseTest : TestBase() {
 
     @Mock lateinit var preferences: Preferences
-    @Mock lateinit var config: Config
 
     private lateinit var sut: OmnipodDashPodStateManagerImpl
 
     @BeforeEach fun setUp() {
-        sut = OmnipodDashPodStateManagerImpl(aapsLogger, rxBus, preferences, config)
+        sut = OmnipodDashPodStateManagerImpl(aapsLogger, rxBus, preferences)
     }
 
     // ---- helpers ------------------------------------------------------------------------------
@@ -92,3 +90,4 @@ class CalculateBolusPulseIncreaseTest : TestBase() {
         assertThat(increase(100, 102, 3, 0)).isEqualTo(2.toShort())
     }
 }
+
