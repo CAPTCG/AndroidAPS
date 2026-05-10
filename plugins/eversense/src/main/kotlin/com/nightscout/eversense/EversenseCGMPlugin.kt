@@ -236,7 +236,7 @@ class EversenseCGMPlugin {
             EversenseLogger.error(TAG, "Cannot calibrate: state is null")
             return false
         }
-        if (state.calibrationReadiness.name != "READY") {
+        if (state.calibrationReadiness != com.nightscout.eversense.enums.CalibrationReadiness.READY) {
             EversenseLogger.error(TAG, "Transmitter is not ready for calibration: ${state.calibrationReadiness}")
             return false
         }

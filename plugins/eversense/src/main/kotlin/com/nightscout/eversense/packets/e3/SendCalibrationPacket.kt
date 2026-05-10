@@ -28,7 +28,7 @@ class SendCalibrationPacket(private val glucoseMgDl: Int) : EversenseBasePacket(
         val bgEncoded = EversenseE3Writer.writeInt16(glucoseMgDl)
         val date = EversenseE3Writer.writeDate(now)
         val time = EversenseE3Writer.writeTime(now)
-        return bgEncoded + date + time
+        return date + time + bgEncoded
     }
 
     override fun parseResponse(): Response? {

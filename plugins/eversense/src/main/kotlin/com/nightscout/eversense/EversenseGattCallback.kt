@@ -1,4 +1,4 @@
-﻿package com.nightscout.eversense
+package com.nightscout.eversense
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
@@ -56,7 +56,7 @@ class EversenseGattCallback(
 
     // FIX 1: Dedicated BLE executor for callbacks; separate network executor for HTTP calls
     // so that network operations in authV2flow() cannot block BLE processing.
-    private val bleExecutor = Executors.newSingleThreadExecutor()
+    private var bleExecutor = Executors.newSingleThreadExecutor()
     private val networkExecutor = Executors.newSingleThreadExecutor()
 
     private val handler = Handler(Looper.getMainLooper())
@@ -109,6 +109,8 @@ class EversenseGattCallback(
         bluetoothGatt?.close()
         bluetoothGatt = null
         connected = false
+        bleExecutor.shutdownNow()
+        bleExecutor = Executors.newSingleThreadExecutor()
         EversenseLogger.info(TAG, "GATT cleaned up before reconnect")
     }
     @SuppressLint("MissingPermission")
@@ -167,10 +169,14 @@ class EversenseGattCallback(
             }
 
             if (status == 19) {
-                failedConnectionAttempts++
-                EversenseLogger.warning(TAG, "Connection terminated by transmitter (status 19) — attempt $failedConnectionAttempts")
-                if (failedConnectionAttempts >= PLACEMENT_WARNING_THRESHOLD) {
-                    handler.post { plugin.watchers.forEach { it.onTransmitterNotPlaced() } }
+                if (!is365()) {
+                    failedConnectionAttempts++
+                    EversenseLogger.warning(TAG, "Connection terminated by transmitter (status 19) — attempt $failedConnectionAttempts")
+                    if (failedConnectionAttempts >= PLACEMENT_WARNING_THRESHOLD) {
+                        handler.post { plugin.watchers.forEach { it.onTransmitterNotPlaced() } }
+                    }
+                } else {
+                    EversenseLogger.debug(TAG, "365 post-sync disconnect (status 19) — normal behaviour, not a placement failure")
                 }
             } else {
                 failedConnectionAttempts = 0
@@ -211,11 +217,11 @@ class EversenseGattCallback(
     @SuppressLint("MissingPermission")
     override fun onMtuChanged(gatt: BluetoothGatt?, mtu: Int, status: Int) {
         if (status != 0) {
-            EversenseLogger.error(TAG, "Failed to set payload size - status: $status")
-            return
+            EversenseLogger.warning(TAG, "MTU negotiation failed (status: $status) — using default payload size of 20")
+            payloadSize = 20
+        } else {
+            payloadSize = mtu - 3
         }
-
-        payloadSize = mtu - 3
         EversenseLogger.debug(TAG, "New payload size: $payloadSize")
 
         val success = gatt?.discoverServices()
