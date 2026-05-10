@@ -244,7 +244,16 @@ class EversensePlugin @Inject constructor(
         aapsLogger.info(LTag.BGSOURCE, "New state received: ${Json.encodeToString(state)}")
 
         // Update sensor battery level for Overview status lights
-        sensorBatteryLevel = if (state.batteryPercentage > 0) state.batteryPercentage else -1
+        sensorBatteryLevel = if (state.batteryPercentage >= 0) state.batteryPercentage else -1
+
+        // Keep SENSOR_CHANGE therapy event in sync with transmitter insertion date so
+        // the home screen sensor age matches the Eversense Status page insertion date.
+        if (state.insertionDate > 0) {
+            ioScope.launch {
+                persistenceLayer.insertCgmSourceData(Sources.Eversense, emptyList(), emptyList(), state.insertionDate)
+                aapsLogger.debug(LTag.BGSOURCE, "Updated SENSOR_CHANGE event to insertionDate: ${state.insertionDate}")
+            }
+        }
 
         // Sync SAGE color thresholds to match Eversense sensor lifetime and notification days
         if (state.insertionDate > 0) {
