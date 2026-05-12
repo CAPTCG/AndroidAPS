@@ -446,12 +446,17 @@ class EversensePlugin @Inject constructor(
                     )
                 }
 
-                val uploadOk = com.nightscout.eversense.util.EversenseHttp365Util.uploadGlucoseReadings(
-                    preferences = prefs,
-                    readings = readings,
-                    transmitterSerialNumber = state.transmitterName.ifEmpty { state.transmitterSerialNumber },
-                    firmwareVersion = state.firmwareVersion
-                )
+                val uploadOk = try {
+                    com.nightscout.eversense.util.EversenseHttp365Util.uploadGlucoseReadings(
+                        preferences = prefs,
+                        readings = readings,
+                        transmitterSerialNumber = state.transmitterName.ifEmpty { state.transmitterSerialNumber },
+                        firmwareVersion = state.firmwareVersion
+                    )
+                } catch (e: Exception) {
+                    aapsLogger.error(LTag.BGSOURCE, "Eversense uploadGlucoseReadings EXCEPTION: : ", e)
+                    false
+                }
                 val msg = if (uploadOk)
                     "Eversense cloud upload: ✅ ${readings.size} reading(s) sent"
                 else
