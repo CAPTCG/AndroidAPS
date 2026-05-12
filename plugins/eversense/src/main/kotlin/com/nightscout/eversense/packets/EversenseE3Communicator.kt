@@ -1,4 +1,4 @@
-package com.nightscout.eversense.packets
+﻿package com.nightscout.eversense.packets
 
 import android.content.SharedPreferences
 import android.os.Handler
@@ -103,7 +103,9 @@ class EversenseE3Communicator {
                 result += EversenseCGMResult(
                     glucoseInMgDl = currentGlucose,
                     datetime = glucoseData.datetime,
-                    trend = glucoseData.trend
+                    trend = glucoseData.trend,
+                    sensorId = state.sensorId,
+                    rawResponseHex = glucoseData.rawResponseHex
                 )
 
                 // TODO: read history for backfill

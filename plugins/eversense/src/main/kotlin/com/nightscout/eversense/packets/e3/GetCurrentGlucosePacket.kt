@@ -1,4 +1,4 @@
-package com.nightscout.eversense.packets.e3
+﻿package com.nightscout.eversense.packets.e3
 
 import com.nightscout.eversense.enums.EversenseSecurityType
 import com.nightscout.eversense.enums.EversenseTrendArrow
@@ -23,10 +23,12 @@ class GetCurrentGlucosePacket : EversenseBasePacket() {
             return null
         }
 
+        val rawHex = receivedData.toByteArray().joinToString("") { "%02x".format(it) }
         return Response(
             datetime = EversenseE3Parser.readDate(receivedData, 4) + EversenseE3Parser.readTime(receivedData, 6),
             glucoseInMgDl = EversenseE3Parser.readGlucose(receivedData, 9),
             trend = parseTrend(receivedData[13].toInt()),
+            rawResponseHex = rawHex
         )
     }
 
@@ -41,5 +43,5 @@ class GetCurrentGlucosePacket : EversenseBasePacket() {
         }
     }
 
-    data class Response(val datetime: Long, val glucoseInMgDl: Int, val trend: EversenseTrendArrow) : EversenseBasePacket.Response()
+    data class Response(val datetime: Long, val glucoseInMgDl: Int, val trend: EversenseTrendArrow, val rawResponseHex: String = "") : EversenseBasePacket.Response()
 }
