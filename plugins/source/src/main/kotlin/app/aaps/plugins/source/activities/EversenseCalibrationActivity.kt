@@ -53,7 +53,7 @@ class EversenseCalibrationActivity : AppCompatActivity() {
         statusText.text = when {
             state == null -> getString(R.string.eversense_not_connected)
             state.calibrationReadiness == CalibrationReadiness.READY -> getString(R.string.eversense_calibration_ready)
-            else -> state.calibrationReadiness.name
+            else -> readinessMessage(state.calibrationReadiness)
         }
 
         val unitLabel = findViewById<TextView>(R.id.calibration_unit_label)
@@ -65,6 +65,26 @@ class EversenseCalibrationActivity : AppCompatActivity() {
 
         val submitButton = findViewById<Button>(R.id.calibration_submit_button)
         submitButton.isEnabled = state?.calibrationReadiness == CalibrationReadiness.READY
+
+        // Live-refresh button and status whenever transmitter state changes while screen is open
+        val stateWatcher = object : EversenseWatcher {
+            override fun onStateChanged(state: EversenseState) {
+                mainHandler.post {
+                    val ready = state.calibrationReadiness == CalibrationReadiness.READY
+                    submitButton.isEnabled = ready
+                    bgInput.isEnabled = ready
+                    statusText.text = readinessMessage(state.calibrationReadiness)
+                    EversenseLogger.info(TAG, "State updated — readiness: ")
+                }
+            }
+            override fun onTransmitterReady() {}
+            override fun onConnectionChanged(connected: Boolean) {}
+            override fun onCGMRead(type: EversenseType, readings: List<EversenseCGMResult>) {}
+            override fun onAlarmReceived(alarm: ActiveAlarm) {}
+            override fun onTransmitterNotPlaced() {}
+        }
+        EversenseCGMPlugin.instance.addWatcher(stateWatcher)
+        connectionWatcher = stateWatcher
 
         submitButton.setOnClickListener {
             val rawInput = bgInput.text.toString()
@@ -160,6 +180,21 @@ class EversenseCalibrationActivity : AppCompatActivity() {
                 }
             }
         }.start()
+    }
+
+    private fun readinessMessage(readiness: CalibrationReadiness): String = when (readiness) {
+        CalibrationReadiness.READY              -> getString(R.string.eversense_calibration_ready)
+        CalibrationReadiness.NOT_ENOUGH_DATA     -> "Not enough data yet — wait for more readings"
+        CalibrationReadiness.GLUCOSE_TOO_HIGH    -> "Glucose too high to calibrate"
+        CalibrationReadiness.TOO_SOON            -> "Calibration done recently — wait 2 hours"
+        CalibrationReadiness.DROPOUT_PHASE       -> "Sensor in dropout phase"
+        CalibrationReadiness.SENSOR_EOL          -> "Sensor end of life"
+        CalibrationReadiness.NO_SENSOR_LINKED    -> "No sensor linked to transmitter"
+        CalibrationReadiness.UNSUPPORTED_MODE    -> "Transmitter in unsupported mode"
+        CalibrationReadiness.CALIBRATING         -> "Calibration already in progress"
+        CalibrationReadiness.LED_DISCONNECT_DETECTED -> "Sensor disconnect detected"
+        CalibrationReadiness.TRANSMITTER_EOL     -> "Transmitter end of life"
+        CalibrationReadiness.UNKNOWN             -> "Unknown readiness state"
     }
 
     override fun onDestroy() {
