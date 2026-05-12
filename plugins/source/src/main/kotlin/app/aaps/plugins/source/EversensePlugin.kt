@@ -1,4 +1,4 @@
-package app.aaps.plugins.source
+﻿package app.aaps.plugins.source
 
 import android.Manifest
 import android.content.Intent
@@ -430,6 +430,13 @@ class EversensePlugin @Inject constructor(
                         it.password = password
                     }
                     saveSecureState(secureState)
+                    // Invalidate cached token so next upload re-logs in with the new credentials
+                    val prefs2 = context.getSharedPreferences("EversenseCGMManager", android.content.Context.MODE_PRIVATE)
+                    prefs2.edit(commit = true) {
+                        remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN)
+                        remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN_EXPIRY)
+                    }
+                    aapsLogger.info(LTag.BGSOURCE, "Eversense: credentials updated — token cache cleared, will re-login on next upload")
                     notificationManager.dismiss(NotificationId.EVERSENSE_CREDENTIALS)
                 } else {
                     notificationManager.post(
