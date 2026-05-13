@@ -1,4 +1,4 @@
-﻿package app.aaps.plugins.source
+package app.aaps.plugins.source
 
 import android.Manifest
 import android.content.Intent
@@ -446,54 +446,83 @@ class EversensePlugin @Inject constructor(
                     )
                 }
 
-                val uploadOk = try {
-                    com.nightscout.eversense.util.EversenseHttp365Util.uploadGlucoseReadings(
+                if (type == EversenseType.EVERSENSE_365) {
+                    // E365 US upload
+                    val uploadOk = try {
+                        com.nightscout.eversense.util.EversenseHttp365Util.uploadGlucoseReadings(
+                            preferences = prefs,
+                            readings = readings,
+                            transmitterSerialNumber = state.transmitterName.ifEmpty { state.transmitterSerialNumber },
+                            firmwareVersion = state.firmwareVersion
+                        )
+                    } catch (e: Exception) {
+                        aapsLogger.error(LTag.BGSOURCE, "Eversense uploadGlucoseReadings EXCEPTION: ", e)
+                        false
+                    }
+                    val msg = if (uploadOk)
+                        "Eversense cloud upload: ✅ ${readings.size} reading(s) sent"
+                    else
+                        "Eversense cloud upload: ❌ failed — check credentials and internet"
+                    aapsLogger.info(LTag.BGSOURCE, msg)
+
+                    val latest = readings.firstOrNull { it.rawResponseHex.isNotEmpty() } ?: readings.firstOrNull()
+                    if (latest != null) {
+                        val portalOk = com.nightscout.eversense.util.EversenseHttp365Util.putCurrentValues(
+                            preferences = prefs,
+                            glucose = latest.glucoseInMgDl,
+                            timestamp = latest.datetime,
+                            trend = latest.trend,
+                            signalStrength = state.sensorSignalStrength,
+                            batteryPercentage = state.batteryPercentage
+                        )
+                        aapsLogger.info(LTag.BGSOURCE, "Eversense portal sync: ${if (portalOk) "✅ ok" else "❌ failed"}")
+                    }
+
+                    val uploadableReadings = readings.filter { it.rawResponseHex.isNotEmpty() }
+                    if (uploadableReadings.isNotEmpty()) {
+                        val eventsOk = com.nightscout.eversense.util.EversenseHttp365Util.putDeviceEvents(
+                            preferences = prefs,
+                            readings = uploadableReadings,
+                            transmitterSerialNumber = state.transmitterSerialNumber
+                        )
+                        aapsLogger.info(LTag.BGSOURCE, "Eversense device events: ${if (eventsOk) "✅ ok" else "❌ failed"}")
+                    }
+                    if (cloudUploadToastEnabled()) {
+                        mainHandler.post {
+                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    }
+                } else {
+                    // E3 EU/OUS upload
+                    val latest = readings.firstOrNull()
+                    if (latest != null) {
+                        val portalOk = com.nightscout.eversense.util.EversenseHttpE3Util.putCurrentValues(
+                            preferences = prefs,
+                            glucose = latest.glucoseInMgDl,
+                            timestamp = latest.datetime,
+                            trend = latest.trend,
+                            signalStrength = state.sensorSignalStrength,
+                            batteryPercentage = state.batteryPercentage
+                        )
+                        aapsLogger.info(LTag.BGSOURCE, "E3 portal sync: ${if (portalOk) "✅ ok" else "❌ failed"}")
+                    }
+                    val eventsOk = com.nightscout.eversense.util.EversenseHttpE3Util.putDeviceEvents(
                         preferences = prefs,
                         readings = readings,
-                        transmitterSerialNumber = state.transmitterName.ifEmpty { state.transmitterSerialNumber },
-                        firmwareVersion = state.firmwareVersion
-                    )
-                } catch (e: Exception) {
-                    aapsLogger.error(LTag.BGSOURCE, "Eversense uploadGlucoseReadings EXCEPTION: : ", e)
-                    false
-                }
-                val msg = if (uploadOk)
-                    "Eversense cloud upload: ✅ ${readings.size} reading(s) sent"
-                else
-                    "Eversense cloud upload: ❌ failed — check credentials and internet"
-                aapsLogger.info(LTag.BGSOURCE, msg)
-
-                // Post current glucose state to the portal (updates Last Sync Date + feeds AGP)
-                val latest = readings.firstOrNull { it.rawResponseHex.isNotEmpty() } ?: readings.firstOrNull()
-                if (latest != null) {
-                    val portalOk = com.nightscout.eversense.util.EversenseHttp365Util.putCurrentValues(
-                        preferences = prefs,
-                        glucose = latest.glucoseInMgDl,
-                        timestamp = latest.datetime,
-                        trend = latest.trend,
-                        signalStrength = state.sensorSignalStrength,
-                        batteryPercentage = state.batteryPercentage
-                    )
-                    aapsLogger.info(LTag.BGSOURCE, "Eversense portal sync: ${if (portalOk) "✅ ok" else "❌ failed"}")
-                }
-
-                // Post device events — this is the endpoint that populates the portal's
-                // Sensor Glucose history table (PutCurrentValues alone only updates Last Sync Date)
-                val uploadableReadings = readings.filter { it.rawResponseHex.isNotEmpty() }
-                if (uploadableReadings.isNotEmpty()) {
-                    val eventsOk = com.nightscout.eversense.util.EversenseHttp365Util.putDeviceEvents(
-                        preferences = prefs,
-                        readings = uploadableReadings,
                         transmitterSerialNumber = state.transmitterSerialNumber
                     )
-                    aapsLogger.info(LTag.BGSOURCE, "Eversense device events: ${if (eventsOk) "✅ ok" else "❌ failed"}")
-                }
-
-                if (cloudUploadToastEnabled()) {
-                    mainHandler.post {
-                        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                    val msg = if (eventsOk)
+                        "E3 cloud upload: ✅ ${readings.size} reading(s) sent"
+                    else
+                        "E3 cloud upload: ❌ failed — check credentials and internet"
+                    aapsLogger.info(LTag.BGSOURCE, msg)
+                    if (cloudUploadToastEnabled()) {
+                        mainHandler.post {
+                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
+
             }
         }
     }
