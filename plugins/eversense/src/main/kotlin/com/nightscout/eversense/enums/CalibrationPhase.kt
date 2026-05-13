@@ -31,12 +31,18 @@ enum class CalibrationPhase(private val value: Int) {
     DROPOUT(0x07);
 
     companion object {
-        2 -> INITIALIZATION
+        fun fromE3(value: Int): CalibrationPhase {
+            // Byte mapping from official app Utils$CAL_PHASE enum (decompiled from EU APK v7.1.1):
+            // 0=UNKNOWN, 1=WARM_UP, 2=INITIALIZATION, 3=DAILY_CALIBRATION,
+            // 4=SUSPICIOUS, 5=DROPOUT, 6=DEBUG, 7=UNDERTERMINED
+            return when(value) {
+                1 -> WARMING_UP
+                2 -> INITIALIZATION
                 3 -> DAILY_CALIBRATION
                 4 -> SUSPICIOUS
-                5 -> UNKNOWN
+                5 -> DROPOUT
                 6 -> DEBUG
-                7 -> DROPOUT
+                7 -> UNKNOWN
                 else -> UNKNOWN
             }
         }
