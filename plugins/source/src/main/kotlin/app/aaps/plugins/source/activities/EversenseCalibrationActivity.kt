@@ -183,18 +183,18 @@ class EversenseCalibrationActivity : AppCompatActivity() {
     }
 
     private fun readinessMessage(readiness: CalibrationReadiness): String = when (readiness) {
-        CalibrationReadiness.READY              -> getString(R.string.eversense_calibration_ready)
-        CalibrationReadiness.NOT_ENOUGH_DATA     -> "Not enough data yet — wait for more readings"
-        CalibrationReadiness.GLUCOSE_TOO_HIGH    -> "Glucose too high to calibrate"
-        CalibrationReadiness.TOO_SOON            -> "Calibration done recently — wait 2 hours"
-        CalibrationReadiness.DROPOUT_PHASE       -> "Sensor in dropout phase"
-        CalibrationReadiness.SENSOR_EOL          -> "Sensor end of life"
-        CalibrationReadiness.NO_SENSOR_LINKED    -> "No sensor linked to transmitter"
-        CalibrationReadiness.UNSUPPORTED_MODE    -> "Transmitter in unsupported mode"
-        CalibrationReadiness.CALIBRATING         -> "Calibration already in progress"
+        CalibrationReadiness.READY                   -> getString(R.string.eversense_calibration_ready)
+        CalibrationReadiness.NOT_ENOUGH_DATA         -> "Not enough data yet — wait for more readings"
+        CalibrationReadiness.GLUCOSE_RATE_TOO_HIGH   -> "Glucose rate of change too high to calibrate"
+        CalibrationReadiness.TOO_SOON                -> "Calibration done recently — wait 2 hours"
+        CalibrationReadiness.DROPOUT_PHASE           -> "Sensor in dropout phase"
+        CalibrationReadiness.SENSOR_EOL              -> "Sensor end of life"
+        CalibrationReadiness.NO_SENSOR_LINKED        -> "No sensor linked to transmitter"
+        CalibrationReadiness.UNSUPPORTED_MODE        -> "Transmitter in unsupported mode"
+        CalibrationReadiness.WAITING_POST_CALIBRATION -> "Waiting after calibration — please wait"
         CalibrationReadiness.LED_DISCONNECT_DETECTED -> "Sensor disconnect detected"
-        CalibrationReadiness.TRANSMITTER_EOL     -> "Transmitter end of life"
-        CalibrationReadiness.UNKNOWN             -> "Unknown readiness state"
+        CalibrationReadiness.TRANSMITTER_EOL         -> "Transmitter end of life"
+        CalibrationReadiness.REASON_UNKNOWN          -> "Unknown readiness state"
     }
 
     override fun onDestroy() {

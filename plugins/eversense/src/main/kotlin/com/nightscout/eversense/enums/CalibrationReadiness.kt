@@ -13,11 +13,11 @@ enum class CalibrationReadiness(private val value: Int) {
     @SerialName("NOT_ENOUGH_DATA")
     NOT_ENOUGH_DATA(0x01),
 
-    /** Glucose is too high to do a calibration*/
-    @SerialName("GLUCOSE_TOO_HIGH")
-    GLUCOSE_TOO_HIGH(0x02),
+    /** Glucose rate of change is too high to calibrate */
+    @SerialName("GLUCOSE_RATE_TOO_HIGH")
+    GLUCOSE_RATE_TOO_HIGH(0x02),
 
-    /** A calibration has already be done in the past 2h */
+    /** A calibration has already been done in the past 2h */
     @SerialName("TOO_SOON")
     TOO_SOON(0x03),
 
@@ -37,9 +37,9 @@ enum class CalibrationReadiness(private val value: Int) {
     @SerialName("UNSUPPORTED_MODE")
     UNSUPPORTED_MODE(0x07),
 
-    /** Transmitter is currently calibrating already */
-    @SerialName("CALIBRATING")
-    CALIBRATING(0x08),
+    /** Transmitter is in post-calibration waiting period */
+    @SerialName("WAITING_POST_CALIBRATION")
+    WAITING_POST_CALIBRATION(0x08),
 
     /** Transmitter disconnect detected */
     @SerialName("LED_DISCONNECT_DETECTED")
@@ -49,24 +49,24 @@ enum class CalibrationReadiness(private val value: Int) {
     @SerialName("TRANSMITTER_EOL")
     TRANSMITTER_EOL(0x0A),
 
-    @SerialName("UNKNOWN")
-    UNKNOWN(0xFF);
+    @SerialName("REASON_UNKNOWN")
+    REASON_UNKNOWN(0xFF);
 
     companion object {
         fun from(value: Int): CalibrationReadiness {
             return when(value) {
                 0 -> READY
                 1 -> NOT_ENOUGH_DATA
-                2 -> GLUCOSE_TOO_HIGH
+                2 -> GLUCOSE_RATE_TOO_HIGH
                 3 -> TOO_SOON
                 4 -> DROPOUT_PHASE
                 5 -> SENSOR_EOL
                 6 -> NO_SENSOR_LINKED
                 7 -> UNSUPPORTED_MODE
-                8 -> CALIBRATING
+                8 -> WAITING_POST_CALIBRATION
                 9 -> LED_DISCONNECT_DETECTED
                 10 -> TRANSMITTER_EOL
-                else -> UNKNOWN
+                else -> REASON_UNKNOWN
             }
         }
     }

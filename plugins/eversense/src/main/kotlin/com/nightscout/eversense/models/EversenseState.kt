@@ -10,7 +10,7 @@ class EversenseState {
     var lastSync: Long = 0
     var insertionDate: Long = 0
     var calibrationPhase: CalibrationPhase = CalibrationPhase.UNKNOWN
-    var calibrationReadiness: CalibrationReadiness = CalibrationReadiness.UNKNOWN
+    var calibrationReadiness: CalibrationReadiness = CalibrationReadiness.REASON_UNKNOWN
     var calibrationMode: CalibrationMode = CalibrationMode.DEFAULT
     var nextCalibrationDate: Long = 0
     var lastCalibrationDate: Long = 0
