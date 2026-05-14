@@ -401,7 +401,11 @@ class EversenseGattCallback(
                 return
             }
 
-            if (EversenseE3Packets.isErrorPacket(data[0])) {
+            // Only treat 0x80 as an error if it is NOT the expected response ID for this packet.
+            // ReadSingleByteSerialFlashRegister responses legitimately use 0xAA (170) as their
+            // response ID — but earlier versions of this code checked 0x80 before checking the
+            // expected response ID, causing every battery/readiness/calibration read to fail.
+            if (EversenseE3Packets.isErrorPacket(data[0]) && packetAnnotation.responseId != data[0]) {
                 EversenseLogger.error(TAG, "Received error response - data: ${data.toHexString()}")
                 packet.isErrorResponse = true
                 packet.notifyAll()
