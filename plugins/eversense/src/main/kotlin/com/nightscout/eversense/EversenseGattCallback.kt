@@ -93,6 +93,12 @@ class EversenseGattCallback(
     fun isConnected(): Boolean = connected
     fun is365(): Boolean = security == EversenseSecurityType.SecureV2
 
+    // Submit a task to the bleExecutor and return a Future so callers can block until complete.
+    // This ensures calibration and other ad-hoc BLE operations are serialised with Keep Alive
+    // cycles and do not race with currentPacket assignment.
+    fun submitToExecutor(task: () -> Unit): java.util.concurrent.Future<*> =
+        bleExecutor.submit(task)
+
     // FIX 4: Added disconnect() which calls both disconnect() and close() on the GATT client.
     // Calling only disconnect() without close() leaks the underlying GATT client resource.
     @SuppressLint("MissingPermission")

@@ -241,13 +241,19 @@ class EversenseCGMPlugin {
             return false
         }
         return try {
-            if (gattCallback.is365()) {
-                val packet = com.nightscout.eversense.packets.e365.SetBloodGlucosePointPacket365(glucoseMgDl, timestampMs)
-                gattCallback.writePacket<com.nightscout.eversense.packets.e365.SetBloodGlucosePointPacket365.Response>(packet)
-                EversenseLogger.info(TAG, "365 calibration sent: $glucoseMgDl mg/dL")
-            } else {
-                EversenseE3Communicator.sendCalibration(gattCallback, glucoseMgDl)
+            // Submit calibration to bleExecutor so it runs on the same thread as BLE callbacks.
+            // Calling writePacket directly from a foreign thread races with Keep Alive cycles
+            // that overwrite currentPacket — the response notifyAll() would then be missed.
+            val future = gattCallback.submitToExecutor {
+                if (gattCallback.is365()) {
+                    val packet = com.nightscout.eversense.packets.e365.SetBloodGlucosePointPacket365(glucoseMgDl, timestampMs)
+                    gattCallback.writePacket<com.nightscout.eversense.packets.e365.SetBloodGlucosePointPacket365.Response>(packet)
+                    EversenseLogger.info(TAG, "365 calibration sent: $glucoseMgDl mg/dL")
+                } else {
+                    EversenseE3Communicator.sendCalibration(gattCallback, glucoseMgDl)
+                }
             }
+            future.get(20000, java.util.concurrent.TimeUnit.MILLISECONDS)
             true
         } catch (e: Exception) {
             EversenseLogger.error(TAG, "Failed to send calibration: $e")

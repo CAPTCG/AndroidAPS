@@ -49,7 +49,7 @@ class EversenseStatusActivity : AppCompatActivity() {
         findViewById<Button>(R.id.eversense_btn_sync).setOnClickListener {
             if (eversense.isConnected()) {
                 ioScope.launch { eversense.triggerFullSync(force = true) }
-                updateStatus()
+                mainHandler.postDelayed({ updateStatus() }, 5000)
             }
         }
     }
@@ -65,7 +65,7 @@ class EversenseStatusActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.eversense_status_insertion).text =
             "Insertion date: " + (state?.let { dateFormatter.format(Date(it.insertionDate)) } ?: notConnected)
         findViewById<TextView>(R.id.eversense_status_last_sync).text =
-            "Last sync: " + (state?.let { dateFormatter.format(Date(it.lastSync)) } ?: notConnected)
+            "Last sync: " + (state?.let { if (it.lastSync > 0) dateFormatter.format(Date(it.lastSync)) else "Never" } ?: notConnected)
         findViewById<TextView>(R.id.eversense_status_signal).text =
             "Placement signal: " + (state?.let { signalToLabel(it.sensorSignalStrength) } ?: notConnected)
 
