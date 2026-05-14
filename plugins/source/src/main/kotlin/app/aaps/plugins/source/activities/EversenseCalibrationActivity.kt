@@ -183,18 +183,18 @@ class EversenseCalibrationActivity : AppCompatActivity() {
     }
 
     private fun readinessMessage(readiness: CalibrationReadiness): String = when (readiness) {
-        CalibrationReadiness.READY                   -> getString(R.string.eversense_calibration_ready)
-        CalibrationReadiness.NOT_ENOUGH_DATA         -> "Not enough data yet — wait for more readings"
-        CalibrationReadiness.GLUCOSE_RATE_TOO_HIGH   -> "Glucose rate of change too high to calibrate"
-        CalibrationReadiness.TOO_SOON                -> "Calibration done recently — wait 2 hours"
-        CalibrationReadiness.DROPOUT_PHASE           -> "Sensor in dropout phase"
-        CalibrationReadiness.SENSOR_EOL              -> "Sensor end of life"
-        CalibrationReadiness.NO_SENSOR_LINKED        -> "No sensor linked to transmitter"
-        CalibrationReadiness.UNSUPPORTED_MODE        -> "Transmitter in unsupported mode"
-        CalibrationReadiness.WAITING_POST_CALIBRATION -> "Waiting after calibration — please wait"
-        CalibrationReadiness.LED_DISCONNECT_DETECTED -> "Sensor disconnect detected"
-        CalibrationReadiness.TRANSMITTER_EOL         -> "Transmitter end of life"
-        CalibrationReadiness.REASON_UNKNOWN          -> "Unknown readiness state"
+        CalibrationReadiness.READY                    -> getString(R.string.eversense_calibration_ready)
+        CalibrationReadiness.NOT_ENOUGH_DATA          -> "Please ensure your Transmitter is placed over the sensor, wait a few minutes, and try again."
+        CalibrationReadiness.GLUCOSE_RATE_TOO_HIGH    -> "Your Sensor glucose is changing too quickly. Please wait 10 minutes and try again."
+        CalibrationReadiness.TOO_SOON                 -> "It is not time for your scheduled calibration. Please try again when prompted."
+        CalibrationReadiness.DROPOUT_PHASE            -> "Glucose data is currently unavailable. Please measure your glucose manually using your blood glucose meter."
+        CalibrationReadiness.SENSOR_EOL               -> "Sensor is retired. Please contact your health care provider."
+        CalibrationReadiness.NO_SENSOR_LINKED         -> "Your Transmitter is not linked to a Sensor. Please link a Sensor and try again."
+        CalibrationReadiness.UNSUPPORTED_MODE         -> "Your Transmitter is in a mode which does not support Calibration. Please contact your health care provider for further questions."
+        CalibrationReadiness.WAITING_POST_CALIBRATION -> "Waiting for post calibration sensor measurements. Please wait a few minutes and try again."
+        CalibrationReadiness.LED_DISCONNECT_DETECTED  -> "Sensor disconnect detected. Please ensure your Transmitter is placed correctly over the sensor."
+        CalibrationReadiness.TRANSMITTER_EOL          -> "Your transmitter needs to be replaced. Contact your distributor to order a new transmitter."
+        CalibrationReadiness.REASON_UNKNOWN           -> "Calibration is not available. Please try again later."
     }
 
     override fun onDestroy() {
