@@ -359,8 +359,17 @@ class EversensePlugin @Inject constructor(
 
     override fun onConnectionChanged(connected: Boolean) {
         aapsLogger.info(LTag.BGSOURCE, "Connection changed — connected: $connected")
-        mainHandler.post {
+        if (connected) {
+            // Reset lastSync so fullSync always runs on first connect/reconnect after app restart.
+            // Without this, a persisted lastSync value causes fullSync to skip immediately after
+            // an update or restart, leaving the "Last sync" timestamp frozen on the status screen.
+            val stateJson = securePrefs.getString(StorageKeys.STATE, null) ?: "{}"
+            val state = json.decodeFromString<EversenseState>(stateJson)
+            state.lastSync = 0
+            securePrefs.edit { putString(StorageKeys.STATE, json.encodeToString(state)) }
+            aapsLogger.info(LTag.BGSOURCE, "Reset lastSync on connection — fullSync will run immediately")
         }
+        mainHandler.post { }
     }
 
     override fun onAlarmReceived(alarm: ActiveAlarm) {
