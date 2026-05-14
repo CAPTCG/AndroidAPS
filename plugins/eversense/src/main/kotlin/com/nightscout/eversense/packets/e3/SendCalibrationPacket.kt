@@ -18,7 +18,7 @@ import com.nightscout.eversense.packets.e3.util.EversenseE3Writer
  * [7]    = glucoseMgDl raw value (low byte when <=255)
  * [8]    = BG value MSB  (data16BitsFromIntLSByteFirst[1])
  * [9]    = BG value LSB  (data16BitsFromIntLSByteFirst[0])
- * [10]   = 0x55 (rolling calibration enabled flag)
+ * [10]   = 0x00 — rolling cal disabled; official app only enables this for US+protocolVersion>=4.0
  * [11-12]= CRC16 LSB first, appended by buildRequest()
  *
  * @param glucoseMgDl  Blood glucose value in mg/dL
@@ -54,7 +54,7 @@ class SendCalibrationPacket(
             bgLsb,                          // [7]   BG raw value (LSB)
             bgMsb,                          // [8]   BG MSB
             bgLsb,                          // [9]   BG LSB
-            0x55.toByte()                   // [10]  rolling calibration flag
+            0x00.toByte()                   // [10]  rolling calibration disabled — matches non-US official app
         )
     }
 
