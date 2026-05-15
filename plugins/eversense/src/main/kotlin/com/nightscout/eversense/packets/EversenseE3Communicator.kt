@@ -149,9 +149,17 @@ class EversenseE3Communicator {
                     gatt.writePacket<SetCurrentDatetimePacket.Response>(SetCurrentDatetimePacket())
                 }
 
-                EversenseLogger.debug(TAG, "Reading battery percentage...")
-                val batteryPercentage = gatt.writePacket<GetBatteryPercentagePacket.Response>(GetBatteryPercentagePacket())
-                state.batteryPercentage = batteryPercentage.percentage
+                // Battery is pushed via TransmitterBatteryPush (0x47) and already present in state.
+                // The ReadSingleByte request to 0x040B consistently returns InvalidMessageLength
+                // on E3 firmware 6.04 regardless of address byte order — skip it here to prevent
+                // aborting the rest of fullSync. Battery value arrives via onStateChanged push.
+                try {
+                    EversenseLogger.debug(TAG, "Reading battery percentage...")
+                    val batteryPercentage = gatt.writePacket<GetBatteryPercentagePacket.Response>(GetBatteryPercentagePacket())
+                    state.batteryPercentage = batteryPercentage.percentage
+                } catch (e: Exception) {
+                    EversenseLogger.warning(TAG, "Battery read failed (non-fatal, will use push value): $e")
+                }
 
                 EversenseLogger.debug(TAG, "Reading insertion datetime...")
                 val insertionDate = gatt.writePacket<GetInsertionDatePacket.Response>(GetInsertionDatePacket())
