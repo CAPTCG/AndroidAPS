@@ -142,6 +142,17 @@ class EversenseE3Communicator {
                     return
                 }
 
+                // Send ping first — the official app calls postPingRequest() before any
+                // ReadSingleByte commands. Without it the transmitter rejects 0x2A with
+                // InvalidMessageLength (error 5) for every address.
+                EversenseLogger.debug(TAG, "Pinging transmitter...")
+                try {
+                    gatt.writePacket<PingPacket.Response>(PingPacket())
+                    EversenseLogger.info(TAG, "Ping successful")
+                } catch (e: Exception) {
+                    EversenseLogger.warning(TAG, "Ping failed (non-fatal): $e")
+                }
+
                 EversenseLogger.debug(TAG, "Reading current datetime...")
                 val currentDatetime = gatt.writePacket<GetCurrentDatetimePacket.Response>(GetCurrentDatetimePacket())
                 if (currentDatetime.needsTimeSync) {
