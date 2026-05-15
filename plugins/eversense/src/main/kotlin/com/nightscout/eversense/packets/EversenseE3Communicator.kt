@@ -23,6 +23,7 @@ import com.nightscout.eversense.packets.e3.GetCalibrationDailyPacket
 import com.nightscout.eversense.packets.e3.GetCalibrationPhasePacket
 import com.nightscout.eversense.packets.e3.GetCalibrationReadinessPacket
 import com.nightscout.eversense.packets.e3.GetCurrentDatetimePacket
+import com.nightscout.eversense.packets.e3.PingPacket
 import com.nightscout.eversense.packets.e3.GetCurrentGlucosePacket
 import com.nightscout.eversense.packets.e3.GetInsertionDatePacket
 import com.nightscout.eversense.packets.e3.GetInsertionTimePacket
@@ -314,4 +315,5 @@ class EversenseE3Communicator {
         }
     }
 }
+
 
