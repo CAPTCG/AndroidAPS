@@ -498,9 +498,9 @@ class EversenseGattCallback(
             return
         }
 
-        EversenseLogger.info(TAG, "E3 auth complete — ready for full sync")
-        EversenseE3Communicator.fullSync(this, preferences, plugin.watchers)
-        EversenseLogger.info(TAG, "E3 transmitter ready — notifying watchers")
+        EversenseLogger.info(TAG, "E3 auth complete — notifying watchers")
+        // fullSync is triggered by onConnectionChanged via triggerFullSync on the bleExecutor.
+        // Do NOT call fullSync here — it would race with the triggerFullSync call.
         handler.post { plugin.watchers.forEach { it.onTransmitterReady() } }
     }
 

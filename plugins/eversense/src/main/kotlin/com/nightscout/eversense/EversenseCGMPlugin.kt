@@ -264,6 +264,28 @@ class EversenseCGMPlugin {
 
     // Triggers both a full sync and a glucose read on the connected transmitter.
     // Should be called from a background thread (ioScope).
+    // Submit fullSync to the bleExecutor so it runs on the same thread as BLE callbacks.
+    // This prevents races between fullSync and handleCharacteristicChanged/writePacket.
+    // Called from onConnectionChanged to run immediately on connect without waiting for Keep Alive.
+    fun submitToExecutorAndSync(force: Boolean = false) {
+        val gattCallback = this.gattCallback ?: run {
+            EversenseLogger.error(TAG, "Cannot sync — no gattCallback available")
+            return
+        }
+        val preferences = preferences ?: run {
+            EversenseLogger.error(TAG, "Cannot sync — no preferences available")
+            return
+        }
+        if (!gattCallback.isConnected()) {
+            EversenseLogger.error(TAG, "Cannot sync — not connected")
+            return
+        }
+        gattCallback.submitToExecutor {
+            EversenseLogger.info(TAG, "Running fullSync on bleExecutor after connect")
+            EversenseE3Communicator.fullSync(gattCallback, preferences, watchers.toList(), force)
+        }
+    }
+
     fun triggerFullSync(force: Boolean = false) {
         val gattCallback = this.gattCallback ?: run {
             EversenseLogger.error(TAG, "Cannot sync — no gattCallback available")

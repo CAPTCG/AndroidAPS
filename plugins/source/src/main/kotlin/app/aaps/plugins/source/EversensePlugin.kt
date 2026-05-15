@@ -360,16 +360,14 @@ class EversensePlugin @Inject constructor(
     override fun onConnectionChanged(connected: Boolean) {
         aapsLogger.info(LTag.BGSOURCE, "Connection changed — connected: $connected")
         if (connected) {
-            // Reset lastSync so fullSync always runs on first connect/reconnect after app restart.
-            val stateJson = securePrefs.getString(StorageKeys.STATE, null) ?: "{}"
-            val state = json.decodeFromString<EversenseState>(stateJson)
-            state.lastSync = 0
-            securePrefs.edit { putString(StorageKeys.STATE, json.encodeToString(state)) }
-            aapsLogger.info(LTag.BGSOURCE, "Reset lastSync on connection — triggering fullSync immediately")
-            // Trigger fullSync immediately on connect rather than waiting for the next Keep Alive
-            // which may take up to 4.5 minutes. Without this, lastSync stays "Never" until the
-            // first Keep Alive arrives.
-            ioScope.launch { eversense.triggerFullSync(force = true) }
+            // Trigger fullSync via bleExecutor immediately on connect.
+            // - force=true bypasses the 4.5-minute freshness guard so it always runs.
+            // - submitToExecutor ensures it runs on the same thread as BLE callbacks,
+            //   preventing races with Keep Alive cycles and writePacket/notifyAll.
+            // - We do NOT reset lastSync to 0 — force=true is sufficient and avoids
+            //   the previous issue where lastSync=0 caused "Never" to show on screen.
+            aapsLogger.info(LTag.BGSOURCE, "Scheduling immediate fullSync on bleExecutor")
+            eversense.submitToExecutorAndSync(force = true)
         }
         mainHandler.post { }
     }
