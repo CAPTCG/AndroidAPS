@@ -361,13 +361,15 @@ class EversensePlugin @Inject constructor(
         aapsLogger.info(LTag.BGSOURCE, "Connection changed — connected: $connected")
         if (connected) {
             // Reset lastSync so fullSync always runs on first connect/reconnect after app restart.
-            // Without this, a persisted lastSync value causes fullSync to skip immediately after
-            // an update or restart, leaving the "Last sync" timestamp frozen on the status screen.
             val stateJson = securePrefs.getString(StorageKeys.STATE, null) ?: "{}"
             val state = json.decodeFromString<EversenseState>(stateJson)
             state.lastSync = 0
             securePrefs.edit { putString(StorageKeys.STATE, json.encodeToString(state)) }
-            aapsLogger.info(LTag.BGSOURCE, "Reset lastSync on connection — fullSync will run immediately")
+            aapsLogger.info(LTag.BGSOURCE, "Reset lastSync on connection — triggering fullSync immediately")
+            // Trigger fullSync immediately on connect rather than waiting for the next Keep Alive
+            // which may take up to 4.5 minutes. Without this, lastSync stays "Never" until the
+            // first Keep Alive arrives.
+            ioScope.launch { eversense.triggerFullSync(force = true) }
         }
         mainHandler.post { }
     }
