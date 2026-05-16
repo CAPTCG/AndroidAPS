@@ -13,6 +13,7 @@ import com.nightscout.eversense.callbacks.EversenseScanCallback
 import com.nightscout.eversense.callbacks.EversenseWatcher
 import com.nightscout.eversense.models.EversenseState
 import com.nightscout.eversense.models.EversenseTransmitterSettings
+import com.nightscout.eversense.packets.Eversense365Communicator
 import com.nightscout.eversense.packets.EversenseE3Communicator
 import com.nightscout.eversense.packets.e3.EnterDiagnosticModePacket
 import com.nightscout.eversense.packets.e3.ExitDiagnosticModePacket
@@ -292,8 +293,15 @@ class EversenseCGMPlugin {
             EversenseLogger.error(TAG, "Cannot sync — not connected")
             return
         }
+        // For 365 transmitters, authV2flow already calls fullSync on connect —
+        // submitting another one here would race with it and cause disconnections.
+        // Only submit on-connect fullSync for E3 transmitters.
+        if (gattCallback.is365()) {
+            EversenseLogger.info(TAG, "365 transmitter — skipping submitToExecutorAndSync (authV2flow handles it)")
+            return
+        }
         gattCallback.submitToExecutor {
-            EversenseLogger.info(TAG, "Running fullSync on bleExecutor after connect")
+            EversenseLogger.info(TAG, "Running E3 fullSync on bleExecutor after connect")
             EversenseE3Communicator.fullSync(gattCallback, preferences, watchers.toList(), force)
         }
     }
@@ -312,8 +320,13 @@ class EversenseCGMPlugin {
             return
         }
         EversenseLogger.info(TAG, "Triggering full sync on user request")
-        EversenseE3Communicator.fullSync(gattCallback, preferences, watchers.toList(), force)
-        EversenseE3Communicator.readGlucose(gattCallback, preferences, watchers.toList())
+        if (gattCallback.is365()) {
+            Eversense365Communicator.fullSync(gattCallback, preferences, watchers.toList())
+            Eversense365Communicator.readGlucose(gattCallback, preferences, watchers.toList())
+        } else {
+            EversenseE3Communicator.fullSync(gattCallback, preferences, watchers.toList(), force)
+            EversenseE3Communicator.readGlucose(gattCallback, preferences, watchers.toList())
+        }
         // Update placement signal after sync
         gattCallback.readRssi()
     }
