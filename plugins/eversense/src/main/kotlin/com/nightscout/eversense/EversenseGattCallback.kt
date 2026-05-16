@@ -347,7 +347,7 @@ class EversenseGattCallback(
             }
         }
 
-        if (EversenseE3Packets.isPushPacket(data[0])) {
+        if (!is365() && EversenseE3Packets.isPushPacket(data[0])) {
             EversenseLogger.debug(TAG, "Keep Alive packet received (E3)!")
             bleExecutor.submit {
                 EversenseE3Communicator.readGlucose(this, preferences, plugin.watchers)
