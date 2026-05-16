@@ -359,17 +359,15 @@ class EversensePlugin @Inject constructor(
 
     override fun onConnectionChanged(connected: Boolean) {
         aapsLogger.info(LTag.BGSOURCE, "Connection changed — connected: $connected")
-        if (connected) {
-            // Trigger fullSync via bleExecutor immediately on connect.
-            // - force=true bypasses the 4.5-minute freshness guard so it always runs.
-            // - submitToExecutor ensures it runs on the same thread as BLE callbacks,
-            //   preventing races with Keep Alive cycles and writePacket/notifyAll.
-            // - We do NOT reset lastSync to 0 — force=true is sufficient and avoids
-            //   the previous issue where lastSync=0 caused "Never" to show on screen.
-            aapsLogger.info(LTag.BGSOURCE, "Scheduling immediate fullSync on bleExecutor")
-            eversense.submitToExecutorAndSync(force = true)
-        }
         mainHandler.post { }
+    }
+
+    override fun onTransmitterReady() {
+        // onTransmitterReady fires after auth completes and transmitter type is known.
+        // This is the correct place to trigger the initial fullSync — not onConnectionChanged
+        // which fires before auth and doesn't yet know if it's a 365 or E3 transmitter.
+        aapsLogger.info(LTag.BGSOURCE, "Transmitter ready — scheduling immediate fullSync on bleExecutor")
+        eversense.submitToExecutorAndSync(force = true)
     }
 
     override fun onAlarmReceived(alarm: ActiveAlarm) {
