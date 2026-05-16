@@ -254,6 +254,18 @@ class EversenseCGMPlugin {
                 }
             }
             future.get(20000, java.util.concurrent.TimeUnit.MILLISECONDS)
+            // Update lastCalibrationDate immediately after successful submission.
+            // The flash register reads for calibration dates fail on E3 firmware 6.04,
+            // so we update the state locally to reflect the calibration just submitted.
+            val prefs = preferences ?: return true
+            val stateJson = prefs.getString(com.nightscout.eversense.util.StorageKeys.STATE, null) ?: "{}"
+            val updatedState = JSON.decodeFromString<com.nightscout.eversense.models.EversenseState>(stateJson)
+            updatedState.lastCalibrationDate = timestampMs
+            updatedState.nextCalibrationDate = timestampMs + 24 * 60 * 60 * 1000L // +24 hours
+            prefs.edit(commit = true) {
+                putString(com.nightscout.eversense.util.StorageKeys.STATE, JSON.encodeToString(updatedState))
+            }
+            EversenseLogger.info(TAG, "Updated lastCalibrationDate to $timestampMs after successful calibration")
             true
         } catch (e: Exception) {
             EversenseLogger.error(TAG, "Failed to send calibration: $e")
