@@ -434,18 +434,22 @@ class EversensePlugin @Inject constructor(
                 val username = preferences.get(EversenseStringKey.EversenseUsername)
                 val password = preferences.get(EversenseStringKey.EversensePassword)
                 if (username.isNotEmpty() && password.isNotEmpty()) {
-                    val secureState = getSecureState().also {
-                        it.username = username
-                        it.password = password
-                    }
+                    val secureState = getSecureState()
+                    // Only invalidate the token cache if credentials have actually changed.
+                    // Previously this ran unconditionally on every glucose reading, causing
+                    // a full re-login on every upload.
+                    val credentialsChanged = secureState.username != username || secureState.password != password
+                    secureState.username = username
+                    secureState.password = password
                     saveSecureState(secureState)
-                    // Invalidate cached token so next upload re-logs in with the new credentials
-                    val prefs2 = context.getSharedPreferences("EversenseCGMManager", android.content.Context.MODE_PRIVATE)
-                    prefs2.edit(commit = true) {
-                        remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN)
-                        remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN_EXPIRY)
+                    if (credentialsChanged) {
+                        val prefs2 = context.getSharedPreferences("EversenseCGMManager", android.content.Context.MODE_PRIVATE)
+                        prefs2.edit(commit = true) {
+                            remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN)
+                            remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN_EXPIRY)
+                        }
+                        aapsLogger.info(LTag.BGSOURCE, "Eversense: credentials changed — token cache cleared, will re-login on next upload")
                     }
-                    aapsLogger.info(LTag.BGSOURCE, "Eversense: credentials updated — token cache cleared, will re-login on next upload")
                     notificationManager.dismiss(NotificationId.EVERSENSE_CREDENTIALS)
                 } else {
                     notificationManager.post(
