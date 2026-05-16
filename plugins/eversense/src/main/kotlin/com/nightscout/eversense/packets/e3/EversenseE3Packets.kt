@@ -84,8 +84,7 @@ class EversenseE3Packets {
         // E3 uses a different calibration command with two timestamps (sample + current)
         const val SendBloodGlucoseDataWithTwoTimestampsCommandId = 60.toByte()   // 0x3C
         const val SendBloodGlucoseDataWithTwoTimestampsResponseId = 188.toByte() // 0xBC
-        const val SendBloodGlucoseDataWithTwoTimestampsCommandId = 60.toByte()
-        const val SendBloodGlucoseDataWithTwoTimestampsResponseId = 188.toByte()
+
         const val SensorReadAlertPush = 73.toByte()
         const val SensorReplacement2Push = 75.toByte()
         const val SensorReplacementPush = 68.toByte()
