@@ -173,63 +173,77 @@ class EversenseE3Communicator {
                     EversenseLogger.warning(TAG, "Battery read failed (non-fatal, will use push value): $e")
                 }
 
-                EversenseLogger.debug(TAG, "Reading insertion datetime...")
-                val insertionDate = gatt.writePacket<GetInsertionDatePacket.Response>(GetInsertionDatePacket())
-                val insertionTime = gatt.writePacket<GetInsertionTimePacket.Response>(GetInsertionTimePacket())
-                state.insertionDate = insertionDate.date + insertionTime.time
-
-                EversenseLogger.debug(TAG, "Reading calibration info...")
-                val calibrationPhase = gatt.writePacket<GetCalibrationPhasePacket.Response>(GetCalibrationPhasePacket())
-                val calibrationReadiness = gatt.writePacket<GetCalibrationReadinessPacket.Response>(GetCalibrationReadinessPacket())
-                val nextCalibrationDate = gatt.writePacket<GetNextCalibrationDatePacket.Response>(GetNextCalibrationDatePacket())
-                val nextCalibrationTime = gatt.writePacket<GetNextCalibrationTimePacket.Response>(GetNextCalibrationTimePacket())
-                val lastCalibrationDate = gatt.writePacket<GetLastCalibrationDatePacket.Response>(GetLastCalibrationDatePacket())
-                val lastCalibrationTime = gatt.writePacket<GetLastCalibrationTimePacket.Response>(GetLastCalibrationTimePacket())
+                // All flash register reads below are wrapped in try/catch.
+                // Paolo's E3 firmware 6.04 rejects ReadTwoByte/ReadFourByte commands
+                // with InvalidMessageLength (error 5) — these must be non-fatal so
+                // fullSync completes and lastSync updates even if reads fail.
 
                 try {
-                    // Older E3 transmitters might not have this data point, thus we are allowed to ignore the exception
+                    EversenseLogger.debug(TAG, "Reading insertion datetime...")
+                    val insertionDate = gatt.writePacket<GetInsertionDatePacket.Response>(GetInsertionDatePacket())
+                    val insertionTime = gatt.writePacket<GetInsertionTimePacket.Response>(GetInsertionTimePacket())
+                    state.insertionDate = insertionDate.date + insertionTime.time
+                } catch (e: Exception) {
+                    EversenseLogger.warning(TAG, "Insertion datetime read failed (non-fatal): $e")
+                }
+
+                try {
+                    EversenseLogger.debug(TAG, "Reading calibration info...")
+                    val calibrationPhase = gatt.writePacket<GetCalibrationPhasePacket.Response>(GetCalibrationPhasePacket())
+                    val calibrationReadiness = gatt.writePacket<GetCalibrationReadinessPacket.Response>(GetCalibrationReadinessPacket())
+                    val nextCalibrationDate = gatt.writePacket<GetNextCalibrationDatePacket.Response>(GetNextCalibrationDatePacket())
+                    val nextCalibrationTime = gatt.writePacket<GetNextCalibrationTimePacket.Response>(GetNextCalibrationTimePacket())
+                    val lastCalibrationDate = gatt.writePacket<GetLastCalibrationDatePacket.Response>(GetLastCalibrationDatePacket())
+                    val lastCalibrationTime = gatt.writePacket<GetLastCalibrationTimePacket.Response>(GetLastCalibrationTimePacket())
+                    state.calibrationPhase = calibrationPhase.phase
+                    state.calibrationReadiness = calibrationReadiness.readiness
+                    state.nextCalibrationDate = nextCalibrationDate.date + nextCalibrationTime.time
+                    state.lastCalibrationDate = lastCalibrationDate.date + lastCalibrationTime.time
+                } catch (e: Exception) {
+                    EversenseLogger.warning(TAG, "Calibration info read failed (non-fatal): $e")
+                }
+
+                try {
                     val isDailyCalibration = gatt.writePacket<GetCalibrationDailyPacket.Response>(GetCalibrationDailyPacket())
                     state.calibrationMode = if (isDailyCalibration.isDaily) CalibrationMode.DAILY_SINGLE else CalibrationMode.DAILY_DUAL
-                } catch(exception: Exception) {
+                } catch (e: Exception) {
                     state.calibrationMode = CalibrationMode.DEFAULT
                 }
 
-                state.calibrationPhase = calibrationPhase.phase
-                state.calibrationReadiness = calibrationReadiness.readiness
-                state.nextCalibrationDate = nextCalibrationDate.date + nextCalibrationTime.time
-                state.lastCalibrationDate = lastCalibrationDate.date + lastCalibrationTime.time
-
-                // Transmitter settings
-                EversenseLogger.debug(TAG, "Reading transmitter settings...")
-                val vibrateEnabled = gatt.writePacket<GetSettingVibratePacket.Response>(GetSettingVibratePacket())
-                val glucoseHighEnabled = gatt.writePacket<GetSettingGlucoseHighEnabled.Response>(GetSettingGlucoseHighEnabled())
-                val glucoseHighThreshold = gatt.writePacket<GetSettingGlucoseHighThresholdPacket.Response>(GetSettingGlucoseHighThresholdPacket())
-                val glucoseLowThreshold = gatt.writePacket<GetSettingGlucoseLowThresholdPacket.Response>(GetSettingGlucoseLowThresholdPacket())
-                val rateFallingEnabled = gatt.writePacket<GetSettingRateFallingEnabledPacket.Response>(GetSettingRateFallingEnabledPacket())
-                val rateFallingThreshold = gatt.writePacket<GetSettingRateFallingThresholdPacket.Response>(GetSettingRateFallingThresholdPacket())
-                val rateRisingEnabled = gatt.writePacket<GetSettingRateRisingEnabledPacket.Response>(GetSettingRateRisingEnabledPacket())
-                val rateRisingThreshold = gatt.writePacket<GetSettingRateRisingThresholdPacket.Response>(GetSettingRateRisingThresholdPacket())
-                val predictiveHighEnabled = gatt.writePacket<GetSettingPredictiveHighEnabledPacket.Response>(GetSettingPredictiveHighEnabledPacket())
-                val predictiveHighTime = gatt.writePacket<GetSettingPredictiveHighTimePacket.Response>(GetSettingPredictiveHighTimePacket())
-                val predictiveHighThreshold = gatt.writePacket<GetSettingPredictiveHighThresholdPacket.Response>(GetSettingPredictiveHighThresholdPacket())
-                val predictiveLowEnabled = gatt.writePacket<GetSettingPredictiveLowEnabledPacket.Response>(GetSettingPredictiveLowEnabledPacket())
-                val predictiveLowTime = gatt.writePacket<GetSettingPredictiveLowTimePacket.Response>(GetSettingPredictiveLowTimePacket())
-                val predictiveLowThreshold = gatt.writePacket<GetSettingPredictiveLowThresholdPacket.Response>(GetSettingPredictiveLowThresholdPacket())
-
-                state.settings.vibrateEnabled = vibrateEnabled.enabled
-                state.settings.glucoseHighAlarmEnabled = glucoseHighEnabled.enabled
-                state.settings.glucoseHighAlarmThreshold = glucoseHighThreshold.threshold
-                state.settings.glucoseLowAlarmThreshold = glucoseLowThreshold.threshold
-                state.settings.rateFallingAlarmEnabled = rateFallingEnabled.enabled
-                state.settings.rateFallingAlarmThreshold = rateFallingThreshold.threshold
-                state.settings.rateRisingAlarmEnabled = rateRisingEnabled.enabled
-                state.settings.rateRisingAlarmThreshold = rateRisingThreshold.threshold
-                state.settings.predictiveHighAlarmEnabled = predictiveHighEnabled.enabled
-                state.settings.predictiveHighAlarmMinutes = predictiveHighTime.minutes
-                state.settings.predictiveHighAlarmThreshold = predictiveHighThreshold.threshold
-                state.settings.predictiveLowAlarmEnabled = predictiveLowEnabled.enabled
-                state.settings.predictiveLowAlarmMinutes = predictiveLowTime.minutes
-                state.settings.predictiveLowAlarmThreshold = predictiveLowThreshold.threshold
+                // Transmitter settings — all non-fatal
+                try {
+                    EversenseLogger.debug(TAG, "Reading transmitter settings...")
+                    val vibrateEnabled = gatt.writePacket<GetSettingVibratePacket.Response>(GetSettingVibratePacket())
+                    val glucoseHighEnabled = gatt.writePacket<GetSettingGlucoseHighEnabled.Response>(GetSettingGlucoseHighEnabled())
+                    val glucoseHighThreshold = gatt.writePacket<GetSettingGlucoseHighThresholdPacket.Response>(GetSettingGlucoseHighThresholdPacket())
+                    val glucoseLowThreshold = gatt.writePacket<GetSettingGlucoseLowThresholdPacket.Response>(GetSettingGlucoseLowThresholdPacket())
+                    val rateFallingEnabled = gatt.writePacket<GetSettingRateFallingEnabledPacket.Response>(GetSettingRateFallingEnabledPacket())
+                    val rateFallingThreshold = gatt.writePacket<GetSettingRateFallingThresholdPacket.Response>(GetSettingRateFallingThresholdPacket())
+                    val rateRisingEnabled = gatt.writePacket<GetSettingRateRisingEnabledPacket.Response>(GetSettingRateRisingEnabledPacket())
+                    val rateRisingThreshold = gatt.writePacket<GetSettingRateRisingThresholdPacket.Response>(GetSettingRateRisingThresholdPacket())
+                    val predictiveHighEnabled = gatt.writePacket<GetSettingPredictiveHighEnabledPacket.Response>(GetSettingPredictiveHighEnabledPacket())
+                    val predictiveHighTime = gatt.writePacket<GetSettingPredictiveHighTimePacket.Response>(GetSettingPredictiveHighTimePacket())
+                    val predictiveHighThreshold = gatt.writePacket<GetSettingPredictiveHighThresholdPacket.Response>(GetSettingPredictiveHighThresholdPacket())
+                    val predictiveLowEnabled = gatt.writePacket<GetSettingPredictiveLowEnabledPacket.Response>(GetSettingPredictiveLowEnabledPacket())
+                    val predictiveLowTime = gatt.writePacket<GetSettingPredictiveLowTimePacket.Response>(GetSettingPredictiveLowTimePacket())
+                    val predictiveLowThreshold = gatt.writePacket<GetSettingPredictiveLowThresholdPacket.Response>(GetSettingPredictiveLowThresholdPacket())
+                    state.settings.vibrateEnabled = vibrateEnabled.enabled
+                    state.settings.glucoseHighAlarmEnabled = glucoseHighEnabled.enabled
+                    state.settings.glucoseHighAlarmThreshold = glucoseHighThreshold.threshold
+                    state.settings.glucoseLowAlarmThreshold = glucoseLowThreshold.threshold
+                    state.settings.rateFallingAlarmEnabled = rateFallingEnabled.enabled
+                    state.settings.rateFallingAlarmThreshold = rateFallingThreshold.threshold
+                    state.settings.rateRisingAlarmEnabled = rateRisingEnabled.enabled
+                    state.settings.rateRisingAlarmThreshold = rateRisingThreshold.threshold
+                    state.settings.predictiveHighAlarmEnabled = predictiveHighEnabled.enabled
+                    state.settings.predictiveHighAlarmMinutes = predictiveHighTime.minutes
+                    state.settings.predictiveHighAlarmThreshold = predictiveHighThreshold.threshold
+                    state.settings.predictiveLowAlarmEnabled = predictiveLowEnabled.enabled
+                    state.settings.predictiveLowAlarmMinutes = predictiveLowTime.minutes
+                    state.settings.predictiveLowAlarmThreshold = predictiveLowThreshold.threshold
+                } catch (e: Exception) {
+                    EversenseLogger.warning(TAG, "Settings read failed (non-fatal): $e")
+                }
 
                 // Get firmware version — aligns with iOS GetVersionPacket
                 try {
