@@ -27,15 +27,15 @@ class GetCalibrationPhasePacketTest {
     }
 
     @Test
-    fun `value 2 parses to DAILY_CALIBRATION`() {
+    fun `value 2 parses to INITIALIZATION`() {
         val packet = makePacket(0, 0, 0, 0, 2)
-        assertEquals(CalibrationPhase.DAILY_CALIBRATION, packet.parseResponse()?.phase)
+        assertEquals(CalibrationPhase.INITIALIZATION, packet.parseResponse()?.phase)
     }
 
     @Test
-    fun `value 3 parses to INITIALIZATION`() {
+    fun `value 3 parses to DAILY_CALIBRATION`() {
         val packet = makePacket(0, 0, 0, 0, 3)
-        assertEquals(CalibrationPhase.INITIALIZATION, packet.parseResponse()?.phase)
+        assertEquals(CalibrationPhase.DAILY_CALIBRATION, packet.parseResponse()?.phase)
     }
 
     @Test
@@ -45,9 +45,9 @@ class GetCalibrationPhasePacketTest {
     }
 
     @Test
-    fun `value 5 parses to UNKNOWN`() {
+    fun `value 5 parses to DROPOUT`() {
         val packet = makePacket(0, 0, 0, 0, 5)
-        assertEquals(CalibrationPhase.UNKNOWN, packet.parseResponse()?.phase)
+        assertEquals(CalibrationPhase.DROPOUT, packet.parseResponse()?.phase)
     }
 
     @Test
@@ -57,9 +57,9 @@ class GetCalibrationPhasePacketTest {
     }
 
     @Test
-    fun `value 7 parses to DROPOUT`() {
+    fun `value 7 parses to UNKNOWN`() {
         val packet = makePacket(0, 0, 0, 0, 7)
-        assertEquals(CalibrationPhase.DROPOUT, packet.parseResponse()?.phase)
+        assertEquals(CalibrationPhase.UNKNOWN, packet.parseResponse()?.phase)
     }
 
     @Test
@@ -162,7 +162,7 @@ class GetCalibrationReadinessPacketTest {
     }
 
     @Test
-    fun `unknown value falls back to UNKNOWN`() {
+    fun `unknown value falls back to REASON_UNKNOWN`() {
         val packet = makePacket(0, 0, 0, 0, 99)
         assertEquals(CalibrationReadiness.REASON_UNKNOWN, packet.parseResponse()?.readiness)
     }
