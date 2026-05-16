@@ -108,9 +108,9 @@ class GetCalibrationReadinessPacketTest {
     }
 
     @Test
-    fun `value 2 parses to GLUCOSE_TOO_HIGH`() {
+    fun `value 2 parses to GLUCOSE_RATE_TOO_HIGH`() {
         val packet = makePacket(0, 0, 0, 0, 2)
-        assertEquals(CalibrationReadiness.GLUCOSE_TOO_HIGH, packet.parseResponse()?.readiness)
+        assertEquals(CalibrationReadiness.GLUCOSE_RATE_TOO_HIGH, packet.parseResponse()?.readiness)
     }
 
     @Test
@@ -144,9 +144,9 @@ class GetCalibrationReadinessPacketTest {
     }
 
     @Test
-    fun `value 8 parses to CALIBRATING`() {
+    fun `value 8 parses to WAITING_POST_CALIBRATION`() {
         val packet = makePacket(0, 0, 0, 0, 8)
-        assertEquals(CalibrationReadiness.CALIBRATING, packet.parseResponse()?.readiness)
+        assertEquals(CalibrationReadiness.WAITING_POST_CALIBRATION, packet.parseResponse()?.readiness)
     }
 
     @Test
@@ -164,7 +164,7 @@ class GetCalibrationReadinessPacketTest {
     @Test
     fun `unknown value falls back to UNKNOWN`() {
         val packet = makePacket(0, 0, 0, 0, 99)
-        assertEquals(CalibrationReadiness.UNKNOWN, packet.parseResponse()?.readiness)
+        assertEquals(CalibrationReadiness.REASON_UNKNOWN, packet.parseResponse()?.readiness)
     }
 
     @Test
