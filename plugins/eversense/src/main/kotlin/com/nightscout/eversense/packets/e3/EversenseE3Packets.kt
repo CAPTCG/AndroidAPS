@@ -81,6 +81,9 @@ class EversenseE3Packets {
         const val SaveBLEBondingInformationResponseId = 233.toByte()
         const val SendBloodGlucoseDataCommandId = 21.toByte()
         const val SendBloodGlucoseDataResponseId = 149.toByte()
+        // E3 uses a different calibration command with two timestamps (sample + current)
+        const val SendBloodGlucoseDataWithTwoTimestampsCommandId = 60.toByte()   // 0x3C
+        const val SendBloodGlucoseDataWithTwoTimestampsResponseId = 188.toByte() // 0xBC
         const val SendBloodGlucoseDataWithTwoTimestampsCommandId = 60.toByte()
         const val SendBloodGlucoseDataWithTwoTimestampsResponseId = 188.toByte()
         const val SensorReadAlertPush = 73.toByte()

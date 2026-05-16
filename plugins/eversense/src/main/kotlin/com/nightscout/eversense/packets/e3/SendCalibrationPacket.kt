@@ -9,24 +9,31 @@ import com.nightscout.eversense.packets.e3.util.EversenseE3Writer
  * Sends a blood glucose calibration value to the Eversense E3 transmitter.
  *
  * Packet structure verified against official Eversense app
- * (decompiled from operationToSendBloodGlucoseValueToTransmitter):
+ * (decompiled from operationToSendBloodGlucoseValueWithTwoTimestampsToTransmitter):
  *
- * [0]    = 0x15 (21) — command ID, prepended by buildRequest()
- * [1-2]  = sampleDate — date of the BG measurement (2 bytes, FAT packed)
- * [3-4]  = sampleTime — time of the BG measurement (2 bytes, FAT packed)
- * [5-6]  = currentTime — time of submission = now (2 bytes, FAT packed, NOT date)
- * [7]    = glucoseMgDl raw value (low byte when <=255)
- * [8]    = BG value MSB  (data16BitsFromIntLSByteFirst[1])
- * [9]    = BG value LSB  (data16BitsFromIntLSByteFirst[0])
- * [10]   = 0x00 — rolling cal disabled; official app only enables this for US+protocolVersion>=4.0
- * [11-12]= CRC16 LSB first, appended by buildRequest()
+ * [0]    = 0x3C (60) — command ID for E3 two-timestamp calibration
+ * [1-2]  = sampleDate — FAT-encoded date of the BG measurement
+ * [3-4]  = sampleTime — FAT-encoded time of the BG measurement
+ * [5-6]  = currentDate — FAT-encoded date of submission (NOW) ← critical, was missing
+ * [7-8]  = currentTime — FAT-encoded time of submission (NOW)
+ * [9]    = glucoseMgDl raw value (low byte)
+ * [10]   = glucose MSB (data16BitsFromIntLSByteFirst[1])
+ * [11]   = glucose LSB (data16BitsFromIntLSByteFirst[0])
+ * [12]   = 0x00 — additional param (zeros)
+ * [13]   = 0x00 — additional param (zeros)
+ * [14]   = 0x00 — rolling cal disabled for non-US devices
+ * [15-16]= CRC16, appended by buildRequest()
+ *
+ * NOTE: The previous implementation used command 0x15 (single timestamp, 365-style)
+ * which caused the E3 transmitter to read currentTime bytes as the glucose value,
+ * producing wildly incorrect readings (e.g. 36416 mg/dL = FAT time 17:50 UTC).
  *
  * @param glucoseMgDl  Blood glucose value in mg/dL
  * @param sampleTimeMs Timestamp of the BG measurement (defaults to now)
  */
 @EversensePacket(
-    requestId = EversenseE3Packets.SendBloodGlucoseDataCommandId,
-    responseId = EversenseE3Packets.SendBloodGlucoseDataResponseId,
+    requestId = EversenseE3Packets.SendBloodGlucoseDataWithTwoTimestampsCommandId,
+    responseId = EversenseE3Packets.SendBloodGlucoseDataWithTwoTimestampsResponseId,
     typeId = 0,
     securityType = EversenseSecurityType.None
 )
@@ -40,21 +47,24 @@ class SendCalibrationPacket(
 
         val sampleDate = EversenseE3Writer.writeDate(sampleTimeMs)
         val sampleTime = EversenseE3Writer.writeTime(sampleTimeMs)
-        val currentTime = EversenseE3Writer.writeTime(now)  // official app sends current TIME, not date
+        val currentDate = EversenseE3Writer.writeDate(now)   // current date of submission
+        val currentTime = EversenseE3Writer.writeTime(now)   // current time of submission
 
         // Official app uses data16BitsFromIntLSByteFirst: [LSB, MSB]
-        // Byte [7] = raw glucose value (LSB when <=255), [8] = MSB, [9] = LSB
         val bgLsb = (glucoseMgDl and 0xFF).toByte()
         val bgMsb = ((glucoseMgDl shr 8) and 0xFF).toByte()
 
         return byteArrayOf(
-            sampleDate[0], sampleDate[1],   // [1-2] sample date
-            sampleTime[0], sampleTime[1],   // [3-4] sample time
-            currentTime[0], currentTime[1], // [5-6] current submission time (NOT date)
-            bgLsb,                          // [7]   BG raw value (LSB)
-            bgMsb,                          // [8]   BG MSB
-            bgLsb,                          // [9]   BG LSB
-            0x00.toByte()                   // [10]  rolling calibration disabled — matches non-US official app
+            sampleDate[0], sampleDate[1],   // [1-2]  sample date
+            sampleTime[0], sampleTime[1],   // [3-4]  sample time
+            currentDate[0], currentDate[1], // [5-6]  current submission date
+            currentTime[0], currentTime[1], // [7-8]  current submission time
+            bgLsb,                          // [9]    glucose raw (LSB)
+            bgMsb,                          // [10]   glucose MSB
+            bgLsb,                          // [11]   glucose LSB
+            0x00.toByte(),                  // [12]   additional param
+            0x00.toByte(),                  // [13]   additional param
+            0x00.toByte()                   // [14]   rolling cal disabled (non-US)
         )
     }
 
