@@ -63,7 +63,7 @@ class SendCalibrationPacket(
             bgMsb,                          // [10]   glucose MSB
             bgLsb,                          // [11]   glucose LSB
             0x00.toByte(),                  // [12]   additional param
-            0x00.toByte(),                  // [13]   additional param
+            0x01.toByte(),                  // [13]   param7[0] = 1 (isCalibration flag)
             0x00.toByte()                   // [14]   rolling cal disabled (non-US)
         )
     }
