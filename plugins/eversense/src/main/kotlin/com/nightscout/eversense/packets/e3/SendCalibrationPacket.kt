@@ -59,12 +59,12 @@ class SendCalibrationPacket(
             sampleTime[0], sampleTime[1],   // [3-4]  sample time
             currentDate[0], currentDate[1], // [5-6]  current submission date
             currentTime[0], currentTime[1], // [7-8]  current submission time
-            bgLsb,                          // [9]    glucose raw (LSB)
-            bgMsb,                          // [10]   glucose MSB
-            bgLsb,                          // [11]   glucose LSB
-            0x00.toByte(),                  // [12]   additional param
-            0x01.toByte(),                  // [13]   param7[0] = 1 (isCalibration flag)
-            0x00.toByte()                   // [14]   rolling cal disabled (non-US)
+            bgLsb,                          // [9]    glucose LSB (data16Bits low byte)
+            bgMsb,                          // [10]   glucose MSB (data16Bits high byte)
+            0x00.toByte(),                  // [11]   param7[1] = 0
+            0x00.toByte(),                  // [12]   param7[0] = 0
+            0x00.toByte(),                  // [13]   param6 = 0
+            0x55.toByte()                   // [14]   0x55 = calibration flag (confirmed from iOS EversenseKit PR#35)
         )
     }
 
