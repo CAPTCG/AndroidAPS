@@ -40,15 +40,16 @@ enum class EversenseE3Memory(private val address: Long) {
     CalibrationsMadeInThisPhase(0x0000_08A1);
 
     fun getRequestData(): ByteArray {
-        // Official app sends address bytes in big-endian order (high byte first).
-        // Confirmed by decompiling operationToReadSingleByteSerialFlashRegister:
-        // v3[1]=input[2], v3[2]=input[1], v3[3]=input[0] — most significant byte first.
-        // Sending little-endian caused the transmitter to return InvalidMessageLength (error 5)
-        // for every ReadSingleByte request, breaking battery, calibration readiness, and fullSync.
+        // Official app sends address as little-endian (LSB first) with trailing 0x00.
+        // Confirmed from logcat: official app sends [96 04 00] for address 0x0496.
+        // Format: [addrLSB][addrMSB][0x00]
         return byteArrayOf(
-            (this.address shr 16).toByte(),
-            (this.address shr 8).toByte(),
-            this.address.toByte(),
+            this.address.toByte(),             // addr LSB
+            (this.address shr 8).toByte(),    // addr MSB
+            0x00.toByte(),                    // trailing zero
         )
     }
 }
+
+
+
