@@ -1,4 +1,4 @@
-﻿package com.nightscout.eversense.packets
+package com.nightscout.eversense.packets
 
 import android.content.SharedPreferences
 import android.os.Handler
@@ -182,6 +182,7 @@ class EversenseE3Communicator {
                     EversenseLogger.debug(TAG, "Reading insertion datetime...")
                     val insertionDate = gatt.writePacket<GetInsertionDatePacket.Response>(GetInsertionDatePacket())
                     val insertionTime = gatt.writePacket<GetInsertionTimePacket.Response>(GetInsertionTimePacket())
+                    EversenseLogger.info(TAG, "DEBUG insertionDate.date=${insertionDate.date}, insertionTime.time=${insertionTime.time}, combined=${insertionDate.date + insertionTime.time}")
                     state.insertionDate = insertionDate.date + insertionTime.time
                 } catch (e: Exception) {
                     EversenseLogger.warning(TAG, "Insertion datetime read failed (non-fatal): $e")
