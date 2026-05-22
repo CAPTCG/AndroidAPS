@@ -1,4 +1,4 @@
-package app.aaps.core.interfaces.notifications
+﻿package app.aaps.core.interfaces.notifications
 
 import app.aaps.core.interfaces.notifications.NotificationCategory.AUTOMATION
 import app.aaps.core.interfaces.notifications.NotificationCategory.CGM
@@ -93,11 +93,18 @@ enum class NotificationId(
 
     // CGM
     BG_READINGS_MISSED(27, URGENT, CGM),
-    EVERSENSE_ALARM(95, URGENT, CGM, allowMultiple = true),
-    EVERSENSE_FIRMWARE(96, INFO, CGM),
-    EVERSENSE_RELEASE(97, INFO, CGM),
-    EVERSENSE_PLACEMENT(98, URGENT, CGM),
-    EVERSENSE_CREDENTIALS(99, URGENT, CGM),
+    // CGM — Aidex
+    AIDEX_SENSOR_EXPIRED(95, URGENT, CGM),
+    AIDEX_SENSOR_ERROR(96, URGENT, CGM),
+    AIDEX_SENSOR_STABILIZING(97, NORMAL, CGM),
+    AIDEX_REPLACE_SENSOR(98, NORMAL, CGM),
+    AIDEX_SIGNAL_LOST(99, NORMAL, CGM),
+    // CGM — Eversense
+    EVERSENSE_ALARM(100, URGENT, CGM, allowMultiple = true),
+    EVERSENSE_FIRMWARE(101, INFO, CGM),
+    EVERSENSE_RELEASE(102, INFO, CGM),
+    EVERSENSE_PLACEMENT(103, URGENT, CGM),
+    EVERSENSE_CREDENTIALS(104, URGENT, CGM),
 
     // Loop / APS
     EASY_MODE_ENABLED(2, URGENT, LOOP),
@@ -147,6 +154,7 @@ enum class NotificationId(
     SCENE_CHAINED(1302, INFO, AUTOMATION, allowMultiple = true),
     SCENE_CHAIN_SKIPPED(1303, NORMAL, AUTOMATION, allowMultiple = true),
     SCENE_CHAIN_ERROR(1300, URGENT, AUTOMATION, allowMultiple = true);
+
 
     companion object {
 

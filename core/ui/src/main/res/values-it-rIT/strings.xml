@@ -49,6 +49,10 @@
     <string name="patient_name_default" comment="This is default patient display name, when user does not provide real one">Utente</string>
     <string name="result">Risultato</string>
     <string name="settings">Impostazioni</string>
+    <string name="open_plugin">Apri plugin</string>
+    <string name="configbuilder_pick_one_hint">Sceglierne uno. Solo uno alla volta può essere attivo.</string>
+    <string name="configbuilder_pick_many_hint">Scegli tutte le opzioni che si applicano.</string>
+    <string name="configbuilder_no_selection_warning">Nessun plugin selezionato in questa categoria.</string>
     <string name="simple_mode">Modalità semplice</string>
     <string name="expand">Espandi</string>
     <string name="collapse">Contrai</string>
@@ -607,6 +611,8 @@
     <!-- Profile validation -->
     <string name="no_profile_selected">Nessun profilo selezionato</string>
     <string name="missing_profile_name">Nome profilo mancante</string>
+    <string name="profile_not_saved_activate">Profilo non salvato. Si prega di salvare il profilo prima di attivarlo.</string>
+    <string name="profile_activation_failed">Attivazione del profilo fallita</string>
     <string name="error_in_ic_values">Errore nei valori IC</string>
     <string name="error_in_isf_values">Errore nei valori ISF</string>
     <string name="error_in_basal_values">Errore nei valori della basale</string>
@@ -640,7 +646,10 @@
     <string name="basal">Basale</string>
     <string name="basalpct">% basale</string>
     <string name="sensitivity">Sensibilità</string>
-    <string name="isf_for_carbs">ISF per Calcolatrice e Assorbimento di Carbo: %1$.1f</string>
+    <string name="isf_for_carbs">ISF per Calcolatore e Assorbimento di Carbo: %1$.1f</string>
+    <string name="isf_profile">Profilo ISF: %1$.1f</string>
+    <string name="isf_variable">ISF Variabile: %1$.1f</string>
+    <string name="isf_effective">ISF Effettivo: %1$.1f</string>
     <string name="autosens_long">Valore Autosens: %.0f%%</string>
     <string name="autosens_short">%.0f%%</string>
     <string name="algorithm_long">Autosens nell\'algoritmo: %.0f%%</string>

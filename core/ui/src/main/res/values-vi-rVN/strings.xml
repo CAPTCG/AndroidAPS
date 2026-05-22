@@ -49,6 +49,10 @@
     <string name="patient_name_default" comment="This is default patient display name, when user does not provide real one">Người dùng</string>
     <string name="result">Kết quả</string>
     <string name="settings">Cài đặt</string>
+    <string name="open_plugin">Mở plugin</string>
+    <string name="configbuilder_pick_one_hint">Hãy chọn một. Chỉ một cái có thể hoạt động tại một thời điểm.</string>
+    <string name="configbuilder_pick_many_hint">Chọn tất cả mục phù hợp.</string>
+    <string name="configbuilder_no_selection_warning">Chưa có plugin nào được chọn trong danh mục này.</string>
     <string name="simple_mode">Chế độ đơn giản</string>
     <string name="expand">Mở rộng</string>
     <string name="collapse">Thu gọn</string>
@@ -73,7 +77,7 @@
     <!-- master_password moved to core/keys/strings.xml -->
     <string name="ue_export_to_csv">Xuất dữ liệu sang Excel (csv)</string>
     <string name="confirm">Xác nhận</string>
-    <string name="pump">Bơm</string>
+    <string name="pump">Bơm Insulin</string>
     <string name="pump_management">Bơm Insulin</string>
     <string name="openaps">OpenAPS</string>
     <string name="openaps_short">OAPS</string>
@@ -129,7 +133,7 @@
     <string name="loopisdisabled">Vòng lặp bị vô hiệu hóa</string>
     <string name="alarm">Báo thức</string>
     <string name="exportsettings">Xuất Cài đặt</string>
-    <string name="disableloop">Vô hiệu hóa vòng lặp</string>
+    <string name="disableloop">Tắt vòng lặp</string>
     <string name="disabled_loop">Vô hiệu hóa vòng lặp</string>
     <string name="resumeloop">Khởi động lại vòng lặp</string>
     <string name="suspendloop">Tạm dừng vòng lặp</string>
@@ -206,7 +210,7 @@
     <string name="stoptemptarget">Dừng mục tiêu tạm thời</string>
     <string name="closedloop">Vòng lặp kín</string>
     <string name="openloop">Vòng lặp mở</string>
-    <string name="lowglucosesuspend">Tạm ngừng khi đường huyết thấp</string>
+    <string name="lowglucosesuspend">Tạm dừng khi BG Thấp</string>
     <string name="pump_disconnected">Bơm đã ngắt kết nối</string>
     <string name="pump_suspended">Bơm đã tạm ngưng</string>
     <string name="pump_suspend">Tạm dừng bơm</string>
@@ -287,26 +291,26 @@
     <!--    Temptarget-->
     <string name="mins">%1$d phút</string>
     <!--    Translator-->
-    <string name="careportal">Careportal</string>
+    <string name="careportal">Thông tin điều trị</string>
     <string name="careportal_bgcheck">Kiểm tra BG</string>
     <string name="careportal_mbg">Đường huyết nhập tay hoặc hiệu chuẩn</string>
     <string name="careportal_announcement">Thông báo</string>
     <string name="careportal_settings_export">Xuất cài đặt</string>
     <string name="careportal_note">Ghi chú</string>
     <string name="careportal_question">Câu hỏi</string>
-    <string name="careportal_exercise">Bài tập luyện</string>
+    <string name="careportal_exercise">Tập thể dục</string>
     <string name="careportal_announcement_message">Thông báo: %1$s</string>
-    <string name="careportal_note_message">Ghi chú: %1$s</string>
+    <string name="careportal_note_message">Ghi chú : %1$s</string>
     <string name="careportal_question_message">Câu hỏi: %1$s</string>
     <string name="careportal_exercise_message">Bài tập luyện : %1$s</string>
-    <string name="careportal_pump_site_change">Thay vị trí truyền của bơm</string>
+    <string name="careportal_pump_site_change">Thay vị trí bơm</string>
     <string name="cgm_sensor_insert">Gắn cảm biến</string>
     <string name="careportal_pump_site_management">Vị trí tiêm</string>
     <string name="careportal_cgm_site_management">Vị trí CGM</string>
     <string name="careportal_cgmsensorstart">Khởi động Cảm biến</string>
     <string name="careportal_cgm_sensor_stop">Dừng cảm biến</string>
     <string name="careportal_dad_alert">Cảnh báo D.A.D</string>
-    <string name="careportal_insulin_cartridge_change">Thay ống chứa insulin</string>
+    <string name="careportal_insulin_cartridge_change">Thay bình chứa insulin</string>
     <string name="careportal_profileswitch">Chuyển cấu hình</string>
     <string name="profile_management">Cấu hình</string>
     <string name="careportal_snackbolus">Bolus bữa ăn nhẹ</string>
@@ -372,7 +376,7 @@
     <string name="scene_revert_smb_off">Vô hiệu hóa SMB</string>
     <string name="scene_revert_loop_mode">Hủy chế độ ghi đè đang chạy</string>
     <string name="scene_careportal_no_revert">Các mục nhập CarePortal sẽ không được hoàn tác</string>
-    <string name="careportal_sickness">Bệnh tật</string>
+    <string name="careportal_sickness">Bị ốm</string>
     <string name="careportal_stress">Căng thẳng</string>
     <string name="careportal_pre_period">Trước kỳ kinh</string>
     <string name="careportal_alcohol">Rượu bia</string>
@@ -397,7 +401,7 @@
     <string name="manage_temp_basal_desc">Bắt đầu liều nền tạm thời</string>
     <string name="manage_extended_bolus_desc">Bắt đầu liều bolus kéo dài</string>
     <string name="manage_site_rotation_desc">Theo dõi và luân chuyển vị trí truyền</string>
-    <string name="manage_quickwizard_desc">Quản lý các thiết lập sẵn của hướng dẫn nhanh</string>
+    <string name="manage_quickwizard_desc">Quản lý các thiết lập sẵn của trình hướng dẫn nhanh</string>
     <string name="treatment_note_desc">Thêm ghi chú vào hồ sơ</string>
     <string name="treatment_question_desc">Ghi lại câu hỏi cho nhóm chăm sóc của bạn</string>
     <string name="treatment_cgm_desc">Mở ứng dụng CGM</string>
@@ -466,7 +470,7 @@
     <string name="arrow_center">Ở giữa</string>
     <!--    Command-->
     <string name="connectiontimedout">Hết thời gian kết nối</string>
-    <string name="pump_not_configured">Boưm chưa được cấu hình</string>
+    <string name="pump_not_configured">Bơm chưa được cấu hình</string>
     <!--    PumpEnactResult-->
     <string name="enacted">Đã kích hoạt</string>
     <string name="comment">Nhận xét</string>
@@ -514,7 +518,7 @@
     <string name="uel_cancel_bolus">HỦY LIỀU BOLUS</string>
     <string name="uel_cancel_extended_bolus">HỦY LIỀU BOLUS KÉO DÀI</string>
     <string name="uel_cancel_tt">CANCEL TEMP TARGET</string>
-    <string name="uel_careportal">CAREPORTAL</string>
+    <string name="uel_careportal">THÔNG TIN ĐIỀU TRỊ</string>
     <string name="uel_sensor_location">VỊ TRÍ CẢM BIẾN</string>
     <string name="uel_site_change">THAY ĐIỂM GẮN</string>
     <string name="uel_site_location">SITE LOCATION</string>
@@ -522,13 +526,13 @@
     <string name="uel_calibration">CALIBRATION</string>
     <string name="uel_prime_bolus">BOLUS MỒI</string>
     <string name="uel_treatment">ĐIỀU TRỊ</string>
-    <string name="uel_careportal_ns_refresh">CẬP NHẬT CAREPORTAL TỪ NS</string>
+    <string name="uel_careportal_ns_refresh">CẬP NHẬT THÔNG TIN ĐIỀU TRỊ TỪ NS</string>
     <string name="uel_profile_switch_ns_refresh">LÀM MỚI CHUYỂN CẤU HÌNH TỪ NS</string>
     <string name="uel_treatments_ns_refresh">CẬP NHẬT ĐIỀU TRỊ TỪ NS</string>
     <string name="uel_tt_ns_refresh">CẬP NHẬT TEMP TARGET TỪ NS</string>
     <string name="uel_automation_removed">ĐÃ XÓA TỰ ĐỘNG HOÁ</string>
     <string name="uel_bg_removed">BG REMOVED</string>
-    <string name="uel_careportal_removed">ĐÃ XÓA CAREPORTAL</string>
+    <string name="uel_careportal_removed">ĐÃ XÓA THÔNG TIN ĐIỀU TRỊ</string>
     <string name="uel_bolus_removed">ĐÃ XÓA BOLUS</string>
     <string name="uel_carbs_removed">ĐÃ XÓA CARBS</string>
     <string name="uel_temp_basal_removed">ĐÃ XÓA LIỀU NỀN TẠM</string>
@@ -607,6 +611,8 @@
     <!-- Profile validation -->
     <string name="no_profile_selected">Chưa chọn hồ sơ</string>
     <string name="missing_profile_name">Thiếu tên cấu hình</string>
+    <string name="profile_not_saved_activate">Cấu hình điều trị chưa được lưu. Vui lòng lưu trước khi kích hoạt.</string>
+    <string name="profile_activation_failed">Kích hoạt cấu hình thất bại</string>
     <string name="error_in_ic_values">Lỗi trong giá trị IC</string>
     <string name="error_in_isf_values">Lỗi trong giá trị IC</string>
     <string name="error_in_basal_values">Lỗi ở các giá trị liều nền</string>
@@ -640,7 +646,10 @@
     <string name="basal">Liều Basal</string>
     <string name="basalpct">Liều nền %</string>
     <string name="sensitivity">Độ nhạy</string>
-    <string name="isf_for_carbs">ISF dùng cho tính toán và hấp thụ carb: %1$.1f</string>
+    <string name="isf_for_carbs">ISF trung bình cho Tính toán và Hấp thu carb: %1$.1f</string>
+    <string name="isf_profile">Cấu hình ISF: %1$.1f</string>
+    <string name="isf_variable">ISF thay đổi: %1$.1f</string>
+    <string name="isf_effective">ISF hiệu dụng: %1$.1f</string>
     <string name="autosens_long">Giá trị Autosens: %.0f%%</string>
     <string name="autosens_short">%.0f%%</string>
     <string name="algorithm_long">Autosens trong thuật toán: %.0f%%</string>
@@ -657,7 +666,7 @@
     <string name="cobvsiob">COB với IOB</string>
     <string name="slowabsorptiondetected_plain">!!!!! Phát hiện hấp thu carb chậm trong %1$d%% thời gian. Hãy kiểm tra lại phép tính của bạn. COB có thể bị ước tính cao, do đó có thể dẫn đến việc cung cấp nhiều insulin hơn !!!!!</string>
     <string name="bolus_constraint_applied_warn">Giới hạn bolus đã áp dụng: %1$.2f U đến %2$.2f U</string>
-    <string name="bolus_recorded_only">Bolus chỉ được ghi lại (không tiêm qua pump)</string>
+    <string name="bolus_recorded_only">Liều Bolus chỉ được ghi lại (không tiêm qua Bơm)</string>
     <string name="advisoralarm">Chạy báo thức khi đến giờ ăn</string>
     <string name="wizard_bg_label">BG</string>
     <string name="wizard_correction">Hiệu chỉnh</string>
@@ -832,7 +841,7 @@
     <!--    Pump pair/unpair (shared) -->
     <string name="pump_pair">Ghép nối</string>
     <string name="pump_unpair">Hủy ghép nối</string>
-    <string name="pump_unpair_confirm_title">Hủy ghép đôi bơm?</string>
+    <string name="pump_unpair_confirm_title">Hủy ghép nối bơm?</string>
     <string name="pump_paired" comment="26 characters max for translation">Bơm đã ghép nối</string>
     <!--    BlePreCheck-->
     <string name="ble_not_supported">Thiết bị không hỗ trợ Bluetooth.</string>
@@ -868,7 +877,7 @@
     <string name="remove">Loại bỏ</string>
     <string name="reorder">Sắp xếp lại</string>
     <string name="status">Trạng thái</string>
-    <string name="pump_actions">Các hành động bơm</string>
+    <string name="pump_actions">Các thao tác với bơm</string>
     <string name="tempbasal_button">Liều nền tạm thời</string>
     <string name="extended_bolus_button">Liều bolus kéo dài</string>
     <string name="device_maintenance">Bảo trì thiết bị</string>

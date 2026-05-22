@@ -127,11 +127,11 @@ class MedtrumOverviewViewModel @Inject constructor(
     }
 
     fun onClickRefresh() {
-        commandQueue.readStatus(rh.gs(R.string.requested_by_user), null)
+        viewModelScope.launch { commandQueue.readStatus(rh.gs(R.string.requested_by_user)) }
     }
 
     fun onClickResetAlarms() {
-        commandQueue.clearAlarms(null)
+        viewModelScope.launch { commandQueue.clearAlarms() }
     }
 
     fun onClickChangePatch() {
@@ -249,7 +249,7 @@ class MedtrumOverviewViewModel @Inject constructor(
         // Medtrum-specific rows
         val specificRows = buildList {
             // Pump state
-            add(PumpInfoRow(label = rh.gs(R.string.pump_state_label), value = pumpState.toString()))
+            add(PumpInfoRow(label = rh.gs(R.string.pump_state_label), value = rh.gs(pumpState.label)))
             // tempBasal rate
             add(PumpInfoRow(label = rh.gs(CoreUiR.string.base_basal_rate_label), value = ch.basalRateString(PumpRate(basalRate), true)))
             tempBasalRate?.let {
@@ -324,7 +324,7 @@ class MedtrumOverviewViewModel @Inject constructor(
             if (isPaired) {
                 add(
                     PumpAction(
-                        label = rh.gs(app.aaps.core.ui.R.string.pump_unpair),
+                        label = rh.gs(CoreUiR.string.pump_unpair),
                         icon = Icons.Filled.Bluetooth,
                         category = ActionCategory.MANAGEMENT,
                         onClick = { onUnpairClick() }

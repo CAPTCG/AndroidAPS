@@ -122,7 +122,7 @@
     <string name="bolus_progress">Tiêm liều Bolus</string>
     <string name="press_to_cancel">nhấn để hủy</string>
     <string name="cancel_bolus">HỦY LIỀU BOLUS</string>
-    <string name="status_pump">Pump</string>
+    <string name="status_pump">Bơm Insulin</string>
     <string name="status_loop">Vòng lặp</string>
     <string name="status_profile_switch">Chuyển cấu hình</string>
     <string name="status_tdd">TDD</string>
@@ -271,7 +271,7 @@
     <string name="loop_status_no_last_run">N/A</string>
     <string name="loop_status_closed">Vòng lặp kín</string>
     <string name="loop_status_open">Vòng lặp mở</string>
-    <string name="loop_status_lgs">Tạm ngừng khi đường huyết thấp</string>
+    <string name="loop_status_lgs">Tạm dừng khi đường huyết thấp</string>
     <string name="loop_status_disabled">Đã tắt vòng lặp</string>
     <string name="loop_status_suspended">Đã tạm dừng vòng lặp</string>
     <string name="loop_status_pump_suspended">Bơm đã tạm dừng</string>

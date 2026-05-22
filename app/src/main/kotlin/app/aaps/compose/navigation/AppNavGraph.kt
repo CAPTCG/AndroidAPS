@@ -61,6 +61,7 @@ import app.aaps.plugins.configuration.setupwizard.SetupWizardScreen
 import app.aaps.ui.compose.calibrationDialog.CalibrationDialogScreen
 import app.aaps.ui.compose.carbsDialog.CarbsDialogScreen
 import app.aaps.ui.compose.careDialog.CareDialogScreen
+import app.aaps.ui.compose.configuration.ConfigurationScreen
 import app.aaps.ui.compose.configuration.ConfigurationViewModel
 import app.aaps.ui.compose.extendedBolusDialog.ExtendedBolusDialogScreen
 import app.aaps.ui.compose.fillDialog.FillDialogScreen
@@ -68,10 +69,10 @@ import app.aaps.ui.compose.history.HistoryScreen
 import app.aaps.ui.compose.insulinDialog.InsulinDialogScreen
 import app.aaps.ui.compose.insulinManagement.InsulinManagementScreen
 import app.aaps.ui.compose.insulinManagement.InsulinManagementViewModel
-import app.aaps.ui.compose.main.MainViewModel
 import app.aaps.ui.compose.maintenance.ImportSettingsScreen
 import app.aaps.ui.compose.maintenance.ImportSource
 import app.aaps.ui.compose.maintenance.ImportViewModel
+import app.aaps.ui.compose.overview.chips.ChipsViewModel
 import app.aaps.ui.compose.preferences.AllPreferencesScreen
 import app.aaps.ui.compose.preferences.PreferenceScreenView
 import app.aaps.ui.compose.profileHelper.ProfileHelperScreen
@@ -123,7 +124,6 @@ fun NavHostController.safePopBackStack() {
 fun NavGraphBuilder.appNavGraph(
     navController: NavHostController,
     // ViewModels
-    mainViewModel: MainViewModel,
     insulinManagementViewModel: InsulinManagementViewModel,
     profileManagementViewModel: ProfileManagementViewModel,
     profileEditorViewModel: ProfileEditorViewModel,
@@ -137,6 +137,7 @@ fun NavGraphBuilder.appNavGraph(
     statsViewModel: StatsViewModel,
     siteRotationManagementViewModel: SiteRotationManagementViewModel,
     graphViewModel: app.aaps.ui.compose.overview.graphs.GraphViewModel,
+    chipsViewModel: ChipsViewModel,
     // Dependencies
     swDefinition: SWDefinition,
     rxBus: RxBus,
@@ -283,8 +284,8 @@ fun NavGraphBuilder.appNavGraph(
         CarbsDialogScreen(
             carbsButtonsDef = builtInSearchables.carbsButtons,
             bgInfoState = graphViewModel.bgInfoState,
-            iobUiState = graphViewModel.iobUiState,
-            cobUiState = graphViewModel.cobUiState,
+            iobUiState = chipsViewModel.iobUiState,
+            cobUiState = chipsViewModel.cobUiState,
             onNavigateBack = { navController.safePopBackStack() },
             onShowDeliveryError = { comment ->
                 onShowDeliveryError(comment, app.aaps.core.ui.R.string.treatmentdeliveryerror)
@@ -296,8 +297,8 @@ fun NavGraphBuilder.appNavGraph(
         InsulinDialogScreen(
             insulinButtonsDef = builtInSearchables.insulinButtons,
             bgInfoState = graphViewModel.bgInfoState,
-            iobUiState = graphViewModel.iobUiState,
-            cobUiState = graphViewModel.cobUiState,
+            iobUiState = chipsViewModel.iobUiState,
+            cobUiState = chipsViewModel.cobUiState,
             onNavigateBack = { navController.safePopBackStack() },
             onShowDeliveryError = { comment ->
                 onShowDeliveryError(comment, app.aaps.core.ui.R.string.treatmentdeliveryerror)
@@ -308,8 +309,8 @@ fun NavGraphBuilder.appNavGraph(
     composable(route = AppRoute.TreatmentDialog.route) {
         TreatmentDialogScreen(
             bgInfoState = graphViewModel.bgInfoState,
-            iobUiState = graphViewModel.iobUiState,
-            cobUiState = graphViewModel.cobUiState,
+            iobUiState = chipsViewModel.iobUiState,
+            cobUiState = chipsViewModel.cobUiState,
             onNavigateBack = { navController.safePopBackStack() },
             onShowDeliveryError = { comment ->
                 onShowDeliveryError(comment, app.aaps.core.ui.R.string.treatmentdeliveryerror)
@@ -403,7 +404,7 @@ fun NavGraphBuilder.appNavGraph(
             onNavigateBack = { navController.safePopBackStack() },
             onActivate = { duration, percentage, timeshift, withTT, notes, timestamp, timeChanged ->
                 coroutineScope.launch {
-                    val success = profileManagementViewModel.activateProfile(
+                    profileManagementViewModel.activateProfile(
                         profileIndex = profileIndex,
                         durationMinutes = duration,
                         percentage = percentage,
@@ -413,9 +414,7 @@ fun NavGraphBuilder.appNavGraph(
                         timestamp = timestamp,
                         timeChanged = timeChanged
                     )
-                    if (success) {
-                        navController.popBackStack(AppRoute.Profile.route, inclusive = false)
-                    }
+                    navController.popBackStack(AppRoute.Profile.route, inclusive = false)
                 }
             }
         )
@@ -523,8 +522,30 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(AppRoute.Configuration.route) {
         val configState by configurationViewModel.uiState.collectAsStateWithLifecycle()
-        app.aaps.ui.compose.configuration.ConfigurationScreen(
+        ConfigurationScreen(
             categories = configState.categories,
+            hardwarePumpConfirmation = configState.hardwarePumpConfirmation,
+            onNavigateBack = { navController.safePopBackStack() },
+            onNavigateToCategory = { type ->
+                navController.navigate(AppRoute.PluginCategory.createRoute(type.ordinal))
+            },
+            onConfirmHardwarePump = {
+                configurationViewModel.confirmHardwarePumpSwitch()
+                onRefreshPermissions()
+            },
+            onDismissHardwarePump = { configurationViewModel.dismissHardwarePumpDialog() }
+        )
+    }
+
+    composable(
+        AppRoute.PluginCategory.route,
+        arguments = listOf(navArgument("typeOrdinal") { type = NavType.IntType })
+    ) { backStackEntry ->
+        val typeOrdinal = backStackEntry.arguments?.getInt("typeOrdinal") ?: return@composable
+        val configState by configurationViewModel.uiState.collectAsStateWithLifecycle()
+        val category = configState.categories.find { it.type.ordinal == typeOrdinal }
+        app.aaps.ui.compose.configuration.PluginCategoryScreen(
+            category = category,
             hardwarePumpConfirmation = configState.hardwarePumpConfirmation,
             onNavigateBack = { navController.safePopBackStack() },
             onNavigate = { request -> onNavigationRequest(request, navController) },
@@ -635,6 +656,7 @@ fun NavGraphBuilder.appNavGraph(
             onBack = { navController.safePopBackStack() },
             onImportSettings = { navController.navigate(AppRoute.ImportSettings.createRoute("LOCAL")) },
             onPluginPreferences = { pluginId -> navController.navigate(AppRoute.PluginPreferences.createRoute(pluginId)) },
+            onPluginOpen = { pluginId -> onNavigationRequest(NavigationRequest.Plugin(pluginId), navController) },
             onSetMasterPassword = { navController.navigate(AppRoute.PreferenceScreen.createRoute("protection", StringKey.ProtectionMasterPassword.key)) },
             onManageInsulin = { navController.navigate(AppRoute.InsulinManagement.createRoute()) },
             onManageProfile = { navController.navigate(AppRoute.Profile.createRoute()) },
