@@ -1,4 +1,4 @@
-﻿package app.aaps.pump.omnipod.dash
+package app.aaps.pump.omnipod.dash
 
 import app.aaps.core.data.model.BS
 import app.aaps.core.data.plugin.PluginType
@@ -39,18 +39,6 @@ import app.aaps.core.keys.interfaces.Preferences
 import app.aaps.core.ui.compose.icons.IcPluginOmnipod
 import app.aaps.core.ui.compose.preference.PreferenceSubScreenDef
 import app.aaps.core.utils.DateTimeUtil
-import app.aaps.pump.omnipod.common.definition.OmnipodCommandType
-import app.aaps.pump.omnipod.common.keys.OmnipodBooleanPreferenceKey
-import app.aaps.pump.omnipod.common.keys.OmnipodIntPreferenceKey
-import app.aaps.pump.omnipod.common.queue.command.CommandDeactivatePod
-import app.aaps.pump.omnipod.common.queue.command.CommandDeliverBasalCorrection
-import app.aaps.pump.omnipod.common.queue.command.CommandDisableSuspendAlerts
-import app.aaps.pump.omnipod.common.queue.command.CommandHandleTimeChange
-import app.aaps.pump.omnipod.common.queue.command.CommandPlayTestBeep
-import app.aaps.pump.omnipod.common.queue.command.CommandResumeDelivery
-import app.aaps.pump.omnipod.common.queue.command.CommandSilenceAlerts
-import app.aaps.pump.omnipod.common.queue.command.CommandUpdateAlertConfiguration
-import app.aaps.pump.omnipod.dash.driver.OmnipodDashManager
 import app.aaps.pump.omnipod.common.bledriver.pod.definition.ActivationProgress
 import app.aaps.pump.omnipod.common.bledriver.pod.definition.AlertConfiguration
 import app.aaps.pump.omnipod.common.bledriver.pod.definition.AlertTrigger
@@ -63,8 +51,20 @@ import app.aaps.pump.omnipod.common.bledriver.pod.definition.PodConstants.Compan
 import app.aaps.pump.omnipod.common.bledriver.pod.response.ResponseType
 import app.aaps.pump.omnipod.common.bledriver.pod.state.CommandConfirmed
 import app.aaps.pump.omnipod.common.bledriver.pod.state.OmnipodDashPodStateManager
+import app.aaps.pump.omnipod.common.definition.OmnipodCommandType
 import app.aaps.pump.omnipod.common.keys.DashBooleanPreferenceKey
 import app.aaps.pump.omnipod.common.keys.DashStringNonPreferenceKey
+import app.aaps.pump.omnipod.common.keys.OmnipodBooleanPreferenceKey
+import app.aaps.pump.omnipod.common.keys.OmnipodIntPreferenceKey
+import app.aaps.pump.omnipod.common.queue.command.CommandDeactivatePod
+import app.aaps.pump.omnipod.common.queue.command.CommandDeliverBasalCorrection
+import app.aaps.pump.omnipod.common.queue.command.CommandDisableSuspendAlerts
+import app.aaps.pump.omnipod.common.queue.command.CommandHandleTimeChange
+import app.aaps.pump.omnipod.common.queue.command.CommandPlayTestBeep
+import app.aaps.pump.omnipod.common.queue.command.CommandResumeDelivery
+import app.aaps.pump.omnipod.common.queue.command.CommandSilenceAlerts
+import app.aaps.pump.omnipod.common.queue.command.CommandUpdateAlertConfiguration
+import app.aaps.pump.omnipod.dash.driver.OmnipodDashManager
 import app.aaps.pump.omnipod.dash.history.DashHistory
 import app.aaps.pump.omnipod.dash.history.data.BasalValuesRecord
 import app.aaps.pump.omnipod.dash.history.data.BolusRecord
@@ -240,10 +240,8 @@ class OmnipodDashPumpPlugin @Inject constructor(
         }
     }
 
-    override fun isConfigured(): Boolean = podStateManager.isPodRunning
-
     override fun isInitialized(): Boolean {
-        return isConfigured()
+        return podStateManager.isPodRunning
     }
 
     override fun isSuspended(): Boolean {
@@ -523,8 +521,9 @@ class OmnipodDashPumpPlugin @Inject constructor(
 
         val requestedInsulinAmount = PodConstants.POD_PULSE_BOLUS_UNITS
 
-        if (requestedInsulinAmount > reservoirLevel.value.iU(1.0)) {
-            aapsLogger.info(LTag.PUMP, "Basal correction skipped: not enough insulin in reservoir ($requestedInsulinAmount > $reservoirLevel)")
+        val availableInsulin = reservoirLevel.value.cU
+        if (requestedInsulinAmount > availableInsulin) {
+            aapsLogger.info(LTag.PUMP, "Basal correction skipped: not enough insulin in reservoir ($requestedInsulinAmount > $availableInsulin)")
             return pumpEnactResultProvider.get().success(false).enacted(false).comment("Not enough insulin in reservoir")
         }
         if (podStateManager.deliveryStatus?.bolusDeliveringActive() == true) {
@@ -779,8 +778,8 @@ class OmnipodDashPumpPlugin @Inject constructor(
                 continue
             }
             val percent = (waited.toFloat() / estimatedDeliveryTimeSeconds) * 100
-            val insulin = bolusProgressData.state.value?.insulin ?: 0.0
-            val delivered = insulin * percent / 100.0
+            bolusProgressData.updateProgress(percent = percent.toInt())
+        }
 
         (1..BOLUS_RETRIES).forEach { tryNumber ->
             updateBolusProgressDialog(rh.gs(R.string.checking_delivery_status), 100)
@@ -1602,8 +1601,3 @@ class OmnipodDashPumpPlugin @Inject constructor(
     )
 
 }
-
-
-
-
-
