@@ -351,8 +351,7 @@ class EversenseGattCallback(
                 data = cryptoUtil.decrypt(data)
                 EversenseLogger.debug(TAG, "Decrypted data -> ${data.toHexString()}")
                 if (data.isEmpty()) {
-                    EversenseLogger.error(TAG, "Failed to decrypt data — re-running security handshake on next connection")
-                    cryptoUtil.disallowUseShortcut()
+                    EversenseLogger.error(TAG, "Failed to decrypt data — disconnecting, will retry shortcut on next connection")
                     gatt.disconnect()
                     return
                 }
