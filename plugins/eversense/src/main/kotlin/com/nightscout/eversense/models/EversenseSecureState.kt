@@ -10,5 +10,4 @@ class EversenseSecureState {
     var clientId: String = ""
     var privateKey: String = ""
     var publicKey: String = ""
-    var cachedCertificate: String = ""
 }
