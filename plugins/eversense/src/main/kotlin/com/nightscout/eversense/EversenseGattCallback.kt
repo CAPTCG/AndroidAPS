@@ -1,4 +1,4 @@
-﻿package com.nightscout.eversense
+package com.nightscout.eversense
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
@@ -554,15 +554,9 @@ class EversenseGattCallback(
                     return
                 }
 
-                val cert = fleetResponse.Result.Certificate ?: run {
-                    bluetoothGatt?.disconnect()
-                    return
-                }
-                cryptoUtil.saveCachedCertificate(cert)
-
                 @OptIn(ExperimentalStdlibApi::class)
                 writePacket<AuthIdentityPacket.Response>(
-                    AuthIdentityPacket(cert.hexToByteArray())
+                    AuthIdentityPacket(fleetResponse.Result.Certificate?.hexToByteArray() ?: byteArrayOf())
                 )
 
                 cryptoUtil.allowUseShortcut()
