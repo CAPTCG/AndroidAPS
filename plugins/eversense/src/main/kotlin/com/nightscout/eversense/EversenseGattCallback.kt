@@ -518,65 +518,45 @@ class EversenseGattCallback(
                 val clientId = cryptoUtil.getClientId()
                 val whoAmI = writePacket<AuthWhoAmIPacket.Response>(AuthWhoAmIPacket(clientId))
 
-                val state = preferences.getString(StorageKeys.SECURE_STATE, null)
-                    ?.let { kotlinx.serialization.json.Json { ignoreUnknownKeys = true }.decodeFromString<com.nightscout.eversense.models.EversenseSecureState>(it) }
-                    ?: com.nightscout.eversense.models.EversenseSecureState()
+                // Dispatch HTTP work to the network executor and block bleExecutor until complete.
+                val authSession = networkExecutor.submit<Any?> {
+                    EversenseHttp365Util.login(preferences)
+                }.get() ?: run {
+                    bluetoothGatt?.disconnect()
+                    return
+                }
 
-                val certificateHex: String = if (state.cachedCertificate.isNotEmpty()) {
-                    EversenseLogger.info(TAG, "365 auth: using cached certificate (offline-capable)")
-                    state.cachedCertificate
-                } else {
-                    EversenseLogger.info(TAG, "365 auth: fetching certificate from network")
-                    val authSession = networkExecutor.submit<Any?> {
-                        EversenseHttp365Util.login(preferences)
-                    }.get() ?: run {
-                        bluetoothGatt?.disconnect()
-                        return
-                    }
+                authSession as? EversenseHttp365Util.LoginResponseModel ?: run {
+                    bluetoothGatt?.disconnect()
+                    return
+                }
 
-                    authSession as? EversenseHttp365Util.LoginResponseModel ?: run {
-                        bluetoothGatt?.disconnect()
-                        return
-                    }
+                // Cache access token so it can be used for cloud uploads without re-login
+                val expiryMs = System.currentTimeMillis() + (authSession.expires_in * 1000L)
+                preferences.edit().putString(StorageKeys.ACCESS_TOKEN, authSession.access_token)
+                    .putLong(StorageKeys.ACCESS_TOKEN_EXPIRY, expiryMs).apply()
 
-                    val expiryMs = System.currentTimeMillis() + (authSession.expires_in * 1000L)
-                    preferences.edit().putString(StorageKeys.ACCESS_TOKEN, authSession.access_token)
-                        .putLong(StorageKeys.ACCESS_TOKEN_EXPIRY, expiryMs).apply()
+                val fleet = networkExecutor.submit<Any?> {
+                    EversenseHttp365Util.getFleetSecretV2(
+                        accessToken = authSession.access_token,
+                        serialNumber = whoAmI.serialNumber,
+                        nonce = whoAmI.nonce,
+                        flags = whoAmI.flags,
+                        publicKey = cryptoUtil.getClientPublicKey()
+                    )
+                }.get() ?: run {
+                    bluetoothGatt?.disconnect()
+                    return
+                }
 
-                    val fleet = networkExecutor.submit<Any?> {
-                        EversenseHttp365Util.getFleetSecretV2(
-                            accessToken = authSession.access_token,
-                            serialNumber = whoAmI.serialNumber,
-                            nonce = whoAmI.nonce,
-                            flags = whoAmI.flags,
-                            publicKey = cryptoUtil.getClientPublicKey()
-                        )
-                    }.get() ?: run {
-                        bluetoothGatt?.disconnect()
-                        return
-                    }
-
-                    val fleetResponse = fleet as? EversenseHttp365Util.FleetSecretV2ResponseModel ?: run {
-                        bluetoothGatt?.disconnect()
-                        return
-                    }
-
-                    val cert = fleetResponse.Result.Certificate ?: run {
-                        bluetoothGatt?.disconnect()
-                        return
-                    }
-
-                    // Cache certificate for offline use
-                    state.cachedCertificate = cert
-                    preferences.edit(commit = true) {
-                        putString(StorageKeys.SECURE_STATE, kotlinx.serialization.json.Json { ignoreUnknownKeys = true }.encodeToString(state))
-                    }
-                    cert
+                val fleetResponse = fleet as? EversenseHttp365Util.FleetSecretV2ResponseModel ?: run {
+                    bluetoothGatt?.disconnect()
+                    return
                 }
 
                 @OptIn(ExperimentalStdlibApi::class)
                 writePacket<AuthIdentityPacket.Response>(
-                    AuthIdentityPacket(certificateHex.hexToByteArray())
+                    AuthIdentityPacket(fleetResponse.Result.Certificate?.hexToByteArray() ?: byteArrayOf())
                 )
 
                 cryptoUtil.allowUseShortcut()
