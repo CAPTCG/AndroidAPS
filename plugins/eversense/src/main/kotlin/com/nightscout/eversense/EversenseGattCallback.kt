@@ -518,6 +518,15 @@ class EversenseGattCallback(
                 val clientId = cryptoUtil.getClientId()
                 val whoAmI = writePacket<AuthWhoAmIPacket.Response>(AuthWhoAmIPacket(clientId))
 
+                // Use cached certificate if available — allows offline auth (e.g. on a flight)
+                val cachedCert = cryptoUtil.getCachedCertificate()
+                if (cachedCert.isNotEmpty()) {
+                    EversenseLogger.info(TAG, "365 auth: using cached certificate (offline-capable)")
+                    @OptIn(ExperimentalStdlibApi::class)
+                    writePacket<AuthIdentityPacket.Response>(AuthIdentityPacket(cachedCert.hexToByteArray()))
+                    cryptoUtil.allowUseShortcut()
+                } else {
+
                 // Dispatch HTTP work to the network executor and block bleExecutor until complete.
                 val authSession = networkExecutor.submit<Any?> {
                     EversenseHttp365Util.login(preferences)
@@ -566,6 +575,7 @@ class EversenseGattCallback(
                 )
 
                 cryptoUtil.allowUseShortcut()
+                }
             }
 
             val signature = cryptoUtil.generateEphem() ?: run {
