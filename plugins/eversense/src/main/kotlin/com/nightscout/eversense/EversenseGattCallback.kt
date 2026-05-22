@@ -340,7 +340,11 @@ class EversenseGattCallback(
                 EversenseLogger.debug(TAG, "Decrypted data -> ${data.toHexString()}")
                 if (data.isEmpty()) {
                     EversenseLogger.error(TAG, "Failed to decrypt data — re-running security handshake on next connection")
-                    cryptoUtil.disallowUseShortcut()
+                    // Only clear shortcut if no cached certificate — if we have one,
+                    // we can re-auth offline without needing the network.
+                    if (cryptoUtil.getCachedCertificate().isEmpty()) {
+                        cryptoUtil.disallowUseShortcut()
+                    }
                     gatt.disconnect()
                     return
                 }
