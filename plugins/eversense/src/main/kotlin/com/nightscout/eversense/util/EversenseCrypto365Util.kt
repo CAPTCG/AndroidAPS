@@ -56,6 +56,14 @@ class EversenseCrypto365Util(val preference: SharedPreferences) {
         saveState(state, preference)
     }
 
+    fun getCachedCertificate(): String {
+        return preference.getString(StorageKeys.CACHED_CERTIFICATE, "") ?: ""
+    }
+
+    fun saveCachedCertificate(certificate: String) {
+        preference.edit(commit = true) { putString(StorageKeys.CACHED_CERTIFICATE, certificate) }
+    }
+
     fun disallowUseShortcut() {
         val state = getState(preference)
         state.canUseShortcut = false

@@ -7,5 +7,6 @@ class StorageKeys {
         const val SECURE_STATE = "eversense_state_secure"
         const val ACCESS_TOKEN = "eversense_access_token"
         const val ACCESS_TOKEN_EXPIRY = "eversense_access_token_expiry"
+        const val CACHED_CERTIFICATE = "eversense_cached_certificate"
     }
 }
