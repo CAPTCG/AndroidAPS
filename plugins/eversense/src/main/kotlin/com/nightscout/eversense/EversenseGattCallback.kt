@@ -1,4 +1,4 @@
-package com.nightscout.eversense
+﻿package com.nightscout.eversense
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
@@ -166,6 +166,21 @@ class EversenseGattCallback(
 
         if (newState == BluetoothProfile.STATE_DISCONNECTED || status != BluetoothGatt.GATT_SUCCESS) {
             EversenseLogger.warning(TAG, "Disconnected or failed - status: $status, newState: $newState")
+
+            // FIX 11: For E365 normal post-sync disconnect (status 19), reuse the existing
+            // GATT object and call gatt.connect() directly — exactly as the official app does.
+            // This preserves the BLE bond and session key so the shortcut auth path works
+            // without needing internet. For all other disconnects, close and reconnect fresh.
+            if (status == 19 && is365()) {
+                connected = false
+                handler.post {
+                    plugin.watchers.forEach { it.onConnectionChanged(false) }
+                }
+                EversenseLogger.debug(TAG, "365 post-sync disconnect (status 19) — reusing GATT for reconnect")
+                gatt.connect()
+                return
+            }
+
             gatt.close()
             bluetoothGatt = null
             connected = false
@@ -175,14 +190,11 @@ class EversenseGattCallback(
             }
 
             if (status == 19) {
-                if (!is365()) {
-                    failedConnectionAttempts++
-                    EversenseLogger.warning(TAG, "Connection terminated by transmitter (status 19) — attempt $failedConnectionAttempts")
-                    if (failedConnectionAttempts >= PLACEMENT_WARNING_THRESHOLD) {
-                        handler.post { plugin.watchers.forEach { it.onTransmitterNotPlaced() } }
-                    }
-                } else {
-                    EversenseLogger.debug(TAG, "365 post-sync disconnect (status 19) — normal behaviour, not a placement failure")
+                // E3 only — E365 status 19 is handled above
+                failedConnectionAttempts++
+                EversenseLogger.warning(TAG, "Connection terminated by transmitter (status 19) — attempt $failedConnectionAttempts")
+                if (failedConnectionAttempts >= PLACEMENT_WARNING_THRESHOLD) {
+                    handler.post { plugin.watchers.forEach { it.onTransmitterNotPlaced() } }
                 }
             } else {
                 failedConnectionAttempts = 0
