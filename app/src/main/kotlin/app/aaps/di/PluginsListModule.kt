@@ -1,4 +1,4 @@
-package app.aaps.di
+﻿package app.aaps.di
 
 import app.aaps.core.interfaces.di.PumpDriver
 import app.aaps.core.interfaces.plugin.PluginBase
@@ -272,7 +272,7 @@ abstract class PluginsListModule {
     @Binds
     @AllConfigs
     @IntoMap
-    @IntKey(445)
+    @IntKey(446)
     abstract fun bindEversensePlugin(plugin: EversensePlugin): PluginBase
 
     @Binds
