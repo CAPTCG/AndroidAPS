@@ -182,8 +182,15 @@ class EversenseE3Communicator {
                     EversenseLogger.debug(TAG, "Reading insertion datetime...")
                     val insertionDate = gatt.writePacket<GetInsertionDatePacket.Response>(GetInsertionDatePacket())
                     val insertionTime = gatt.writePacket<GetInsertionTimePacket.Response>(GetInsertionTimePacket())
-                    EversenseLogger.info(TAG, "DEBUG insertionDate.date=${insertionDate.date}, insertionTime.time=${insertionTime.time}, combined=${insertionDate.date + insertionTime.time}")
-                    state.insertionDate = insertionDate.date + insertionTime.time
+                    val combined = insertionDate.date + insertionTime.time
+                    val minDate = 1577836800000L  // 2020-01-01
+                    val maxDate = 1893456000000L  // 2030-01-01
+                    if (combined in minDate..maxDate) {
+                        state.insertionDate = combined
+                        EversenseLogger.info(TAG, "Insertion date accepted: $combined")
+                    } else {
+                        EversenseLogger.warning(TAG, "Insertion date out of plausible range, ignoring: $combined")
+                    }
                 } catch (e: Exception) {
                     EversenseLogger.warning(TAG, "Insertion datetime read failed (non-fatal): $e")
                 }
