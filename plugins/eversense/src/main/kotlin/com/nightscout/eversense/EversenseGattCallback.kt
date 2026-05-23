@@ -52,6 +52,13 @@ class EversenseGattCallback(
 
         private const val WRITE_TIMEOUT_MS = 5000L
         private const val CALIBRATION_TIMEOUT_MS = 15000L
+
+        // Number of consecutive authV2flow failures before abandoning the shortcut path
+        // and forcing a full re-auth (WhoAmI + fleet certificate). This handles the case
+        // where the BLE stack resets (e.g. charger plug-in) and the session key is lost.
+        // A value of 3 allows transient glitches to recover without internet, while still
+        // falling back to full auth after sustained failures.
+        private const val SHORTCUT_FAIL_THRESHOLD = 3
     }
 
     // FIX 1: Dedicated BLE executor for callbacks; separate network executor for HTTP calls
@@ -89,6 +96,13 @@ class EversenseGattCallback(
     // sustained failures to avoid draining the battery.
     @Volatile
     private var reconnectAttempts: Int = 0
+
+    // FIX 12: Tracks consecutive authV2flow failures while using the shortcut path.
+    // After SHORTCUT_FAIL_THRESHOLD failures, disallowUseShortcut() is called to force
+    // a full re-auth on the next connection. This handles BLE stack resets (e.g. charger
+    // plug-in) that invalidate the session key without needing internet on every reconnect.
+    @Volatile
+    private var shortcutFailCount: Int = 0
 
     fun isConnected(): Boolean = connected
     fun is365(): Boolean = security == EversenseSecurityType.SecureV2
@@ -581,6 +595,9 @@ class EversenseGattCallback(
             val session = writePacket<AuthStartPacket.Response>(AuthStartPacket(cryptoUtil.getStartSecret(signature)))
             cryptoUtil.generateSessionKey(session.sessionPublicKey)
 
+            // Auth succeeded — reset the shortcut fail counter
+            shortcutFailCount = 0
+
             EversenseLogger.info(TAG, "365 auth complete — ready for full sync")
             Eversense365Communicator.fullSync(this, preferences, plugin.watchers)
             EversenseLogger.info(TAG, "365 transmitter ready — notifying watchers")
@@ -589,6 +606,22 @@ class EversenseGattCallback(
         } catch (exception: Exception) {
             EversenseLogger.error(TAG, "[365] authV2 failed: $exception")
             exception.printStackTrace()
+
+            // FIX 12: Track consecutive shortcut failures. After SHORTCUT_FAIL_THRESHOLD
+            // failures, force a full re-auth on the next connection. This recovers from
+            // BLE stack resets (e.g. charger plug-in) that invalidate the session key.
+            // We do NOT immediately disallow on the first failure — transient BLE glitches
+            // often recover on the next attempt without needing internet.
+            if (cryptoUtil.canUseShortcut()) {
+                shortcutFailCount++
+                EversenseLogger.warning(TAG, "Shortcut auth failed ($shortcutFailCount/$SHORTCUT_FAIL_THRESHOLD)")
+                if (shortcutFailCount >= SHORTCUT_FAIL_THRESHOLD) {
+                    EversenseLogger.warning(TAG, "Shortcut fail threshold reached — forcing full re-auth on next connection")
+                    cryptoUtil.disallowUseShortcut()
+                    shortcutFailCount = 0
+                }
+            }
+
             bluetoothGatt?.disconnect()
         }
     }
