@@ -169,11 +169,12 @@ class EversenseE3Communicator {
                     val batteryRaw = gatt.writePacket<GetBatteryPercentagePacket.Response>(GetBatteryPercentagePacket())
                     EversenseLogger.info(TAG, "Battery raw register value: ${batteryRaw.percentage}")
                     state.batteryPercentage = when (batteryRaw.percentage) {
-                        0 -> 5
-                        1 -> 35
-                        2 -> 55
-                        3 -> 75
-                        4 -> 95
+                        0 -> 100
+                        1 -> 80
+                        2 -> 60
+                        3 -> 40
+                        4 -> 20
+                        5 -> 0
                         else -> batteryRaw.percentage
                     }
                     EversenseLogger.info(TAG, "Battery percentage mapped: ${state.batteryPercentage}%")
