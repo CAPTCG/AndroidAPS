@@ -96,7 +96,6 @@ class EversensePlugin @Inject constructor(
     }
 
     private fun cloudUploadEnabled() = preferences.get(BooleanKey.EversenseCloudUploadEnabled)
-    private fun cloudUploadToastEnabled() = preferences.get(BooleanKey.EversenseCloudUploadToast)
 
     private val lastNotifiedFirmwareVersion: String get() = securePrefs.getString("last_notified_firmware_version", "") ?: ""
     private fun setLastNotifiedFirmwareVersion(version: String) = securePrefs.edit(commit = true) { putString("last_notified_firmware_version", version) }
@@ -425,7 +424,7 @@ class EversensePlugin @Inject constructor(
             )
             aapsLogger.info(LTag.BGSOURCE, "CGM insert complete — inserted: ${result.inserted}, updated: ${result.updated}")
 
-            // Upload E365 readings to Eversense cloud so official app sees data without needing BLE
+            // Upload readings to Eversense cloud so official app sees data without needing BLE
             if ((type == EversenseType.EVERSENSE_365 || type == EversenseType.EVERSENSE_E3) && state != null && cloudUploadEnabled()) {
                 val prefs = context.getSharedPreferences("EversenseCGMManager", android.content.Context.MODE_PRIVATE)
                 // Sync credentials from AAPS preferences into SECURE_STATE so EversenseHttp365Util can read them
@@ -434,8 +433,6 @@ class EversensePlugin @Inject constructor(
                 if (username.isNotEmpty() && password.isNotEmpty()) {
                     val secureState = getSecureState()
                     // Only invalidate the token cache if credentials have actually changed.
-                    // Previously this ran unconditionally on every glucose reading, causing
-                    // a full re-login on every upload.
                     val credentialsChanged = secureState.username != username || secureState.password != password
                     secureState.username = username
                     secureState.password = password
@@ -470,11 +467,18 @@ class EversensePlugin @Inject constructor(
                         aapsLogger.error(LTag.BGSOURCE, "Eversense uploadGlucoseReadings EXCEPTION: ", e)
                         false
                     }
-                    val msg = if (uploadOk)
+                    val msg365 = if (uploadOk)
                         "Eversense cloud upload: ✅ ${readings.size} reading(s) sent"
                     else
                         "Eversense cloud upload: ❌ failed — check credentials and internet"
-                    aapsLogger.info(LTag.BGSOURCE, msg)
+                    aapsLogger.info(LTag.BGSOURCE, msg365)
+
+                    // Only notify user on failure — success is silent
+                    if (!uploadOk) {
+                        mainHandler.post {
+                            android.widget.Toast.makeText(context, msg365, android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    }
 
                     val latest = readings.firstOrNull { it.rawResponseHex.isNotEmpty() } ?: readings.firstOrNull()
                     if (latest != null) {
@@ -498,11 +502,6 @@ class EversensePlugin @Inject constructor(
                         )
                         aapsLogger.info(LTag.BGSOURCE, "Eversense device events: ${if (eventsOk) "✅ ok" else "❌ failed"}")
                     }
-                    if (cloudUploadToastEnabled()) {
-                        mainHandler.post {
-                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
-                        }
-                    }
                 } else {
                     // E3 EU/OUS upload
                     val latest = readings.firstOrNull()
@@ -522,18 +521,19 @@ class EversensePlugin @Inject constructor(
                         readings = readings,
                         transmitterSerialNumber = state.transmitterSerialNumber
                     )
-                    val msg = if (eventsOk)
+                    val msgE3 = if (eventsOk)
                         "E3 cloud upload: ✅ ${readings.size} reading(s) sent"
                     else
                         "E3 cloud upload: ❌ failed — check credentials and internet"
-                    aapsLogger.info(LTag.BGSOURCE, msg)
-                    if (cloudUploadToastEnabled()) {
+                    aapsLogger.info(LTag.BGSOURCE, msgE3)
+
+                    // Only notify user on failure — success is silent
+                    if (!eventsOk) {
                         mainHandler.post {
-                            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
+                            android.widget.Toast.makeText(context, msgE3, android.widget.Toast.LENGTH_LONG).show()
                         }
                     }
                 }
-
             }
         }
     }
@@ -595,20 +595,3 @@ class EversensePlugin @Inject constructor(
         private val eversense get() = EversenseCGMPlugin.instance
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
