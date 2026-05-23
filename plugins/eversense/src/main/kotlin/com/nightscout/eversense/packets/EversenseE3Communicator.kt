@@ -1,4 +1,4 @@
-package com.nightscout.eversense.packets
+﻿package com.nightscout.eversense.packets
 
 import android.content.SharedPreferences
 import android.os.Handler
@@ -161,16 +161,24 @@ class EversenseE3Communicator {
                     gatt.writePacket<SetCurrentDatetimePacket.Response>(SetCurrentDatetimePacket())
                 }
 
-                // Battery is pushed via TransmitterBatteryPush (0x47) and already present in state.
-                // The ReadSingleByte request to 0x040B consistently returns InvalidMessageLength
-                // on E3 firmware 6.04 regardless of address byte order — skip it here to prevent
-                // aborting the rest of fullSync. Battery value arrives via onStateChanged push.
+                // The E3 transmitter battery register (0x0496) stores a 5-level enum (0-4),
+                // not a raw percentage. Map each level to a midpoint percentage matching the
+                // official Eversense app display. Raw value logged for calibration purposes.
                 try {
                     EversenseLogger.debug(TAG, "Reading battery percentage...")
-                    val batteryPercentage = gatt.writePacket<GetBatteryPercentagePacket.Response>(GetBatteryPercentagePacket())
-                    state.batteryPercentage = batteryPercentage.percentage
+                    val batteryRaw = gatt.writePacket<GetBatteryPercentagePacket.Response>(GetBatteryPercentagePacket())
+                    EversenseLogger.info(TAG, "Battery raw register value: ${batteryRaw.percentage}")
+                    state.batteryPercentage = when (batteryRaw.percentage) {
+                        0 -> 5
+                        1 -> 35
+                        2 -> 55
+                        3 -> 75
+                        4 -> 95
+                        else -> batteryRaw.percentage
+                    }
+                    EversenseLogger.info(TAG, "Battery percentage mapped: ${state.batteryPercentage}%")
                 } catch (e: Exception) {
-                    EversenseLogger.warning(TAG, "Battery read failed (non-fatal, will use push value): $e")
+                    EversenseLogger.warning(TAG, "Battery read failed (non-fatal): $e")
                 }
 
                 // All flash register reads below are wrapped in try/catch.
@@ -337,5 +345,3 @@ class EversenseE3Communicator {
         }
     }
 }
-
-
