@@ -41,6 +41,7 @@ import com.nightscout.eversense.packets.e365.SetCurrentDateTimePacket
 import com.nightscout.eversense.util.EversenseLogger
 import com.nightscout.eversense.util.StorageKeys
 import kotlinx.serialization.json.Json
+import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 class Eversense365Communicator {
