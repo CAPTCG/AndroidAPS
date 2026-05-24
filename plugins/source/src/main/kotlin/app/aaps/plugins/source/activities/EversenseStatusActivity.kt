@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.MenuItem
+import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -69,11 +70,18 @@ class EversenseStatusActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.eversense_status_signal).text =
             "Placement signal: " + (state?.let { signalToLabel(it.sensorSignalStrength) } ?: notConnected)
 
-
         findViewById<TextView>(R.id.eversense_status_phase).text =
             "Calibration phase: " + (state?.calibrationPhase?.name ?: notConnected)
-        findViewById<TextView>(R.id.eversense_status_readiness).text =
-            "Calibration readiness: " + (state?.calibrationReadiness?.name ?: notConnected)
+
+        // Calibration readiness is only shown for E3 — the E365 does not expose this field.
+        val readinessView = findViewById<TextView>(R.id.eversense_status_readiness)
+        if (eversense.is365()) {
+            readinessView.visibility = View.GONE
+        } else {
+            readinessView.visibility = View.VISIBLE
+            readinessView.text = "Calibration readiness: " + (state?.calibrationReadiness?.name ?: notConnected)
+        }
+
         findViewById<TextView>(R.id.eversense_status_last_cal).text =
             "Last calibration: " + (state?.let { if (it.lastCalibrationDate > 0) dateFormatter.format(Date(it.lastCalibrationDate)) else notConnected } ?: notConnected)
         findViewById<TextView>(R.id.eversense_status_next_cal).text =
@@ -168,5 +176,3 @@ class EversenseStatusActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 }
-
-
