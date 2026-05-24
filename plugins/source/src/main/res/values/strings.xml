@@ -58,7 +58,7 @@
     <string name="eversense_information_connected">Connected</string>
     <string name="eversense_information_battery">Battery percentage</string>
     <string name="eversense_information_insertion_date">Insertion date</string>
-    <string name="eversense_information_last_sync">Last synchronisation</string>
+    <string name="eversense_information_last_sync">Synchronise now</string>
     <string name="eversense_calibration_title">Calibration</string>
     <string name="eversense_calibration_phase">Phase</string>
     <string name="eversense_calibration_last">Last calibration</string>
