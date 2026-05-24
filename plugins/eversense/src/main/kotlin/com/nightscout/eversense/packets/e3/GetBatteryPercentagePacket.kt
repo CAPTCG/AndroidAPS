@@ -20,8 +20,7 @@ class GetBatteryPercentagePacket : EversenseBasePacket() {
         if (receivedData.isEmpty()) {
             return null
         }
-        // E3 firmware 6.04 stores battery percentage as a raw byte value (0-100),
-        // not as an enum index. Return it directly, clamped to valid range.
+        // The E3 battery register returns a raw percentage (0-100) directly.
         val raw = receivedData[getStartIndex()].toInt() and 0xFF
         val percentage = raw.coerceIn(0, 100)
         return Response(percentage = percentage)
