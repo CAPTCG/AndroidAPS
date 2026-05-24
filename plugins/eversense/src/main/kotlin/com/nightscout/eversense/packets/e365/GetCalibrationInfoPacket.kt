@@ -1,4 +1,4 @@
-package com.nightscout.eversense.packets.e365
+﻿package com.nightscout.eversense.packets.e365
 
 import com.nightscout.eversense.enums.CalibrationMode
 import com.nightscout.eversense.enums.CalibrationPhase
@@ -7,6 +7,7 @@ import com.nightscout.eversense.enums.EversenseSecurityType
 import com.nightscout.eversense.packets.EversenseBasePacket
 import com.nightscout.eversense.packets.EversensePacket
 import com.nightscout.eversense.packets.e365.utils.toUnix
+import com.nightscout.eversense.util.EversenseLogger
 
 @EversensePacket(
     requestId = Eversense365Packets.ReadCommandId,
@@ -15,7 +16,6 @@ import com.nightscout.eversense.packets.e365.utils.toUnix
     securityType = EversenseSecurityType.SecureV2
 )
 class GetCalibrationInfoPacket : EversenseBasePacket() {
-
     override fun getRequestData(): ByteArray {
         return byteArrayOf()
     }
@@ -39,11 +39,12 @@ class GetCalibrationInfoPacket : EversenseBasePacket() {
         if (receivedData.isEmpty()) {
             return null
         }
-
         val calPerDay = receivedData[12].toInt()
+        val rawReadiness = receivedData[3].toInt() and 0xFF
+        EversenseLogger.info("GetCalibrationInfoPacket", "Raw calibration readiness byte: $rawReadiness (0x${rawReadiness.toString(16)})")
         return Response(
             currentPhase = CalibrationPhase.from365(receivedData[2].toInt(), calPerDay),
-            calibrationReadiness = CalibrationReadiness.from(receivedData[3].toInt()),
+            calibrationReadiness = CalibrationReadiness.from(rawReadiness),
             calibrationMode = CalibrationMode.from365(calPerDay),
             nextCalibration = receivedData.copyOfRange(4, 12).toUnix(),
             lastCalibration = receivedData.copyOfRange(34, 42).toUnix(),
