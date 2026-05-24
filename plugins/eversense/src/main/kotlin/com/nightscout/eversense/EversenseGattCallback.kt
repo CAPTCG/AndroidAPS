@@ -605,7 +605,7 @@ class EversenseGattCallback(
             shortcutFailCount = 0
 
             EversenseLogger.info(TAG, "365 auth complete — ready for full sync")
-            Eversense365Communicator.fullSync(this, preferences, plugin.watchers)
+            Eversense365Communicator.fullSync(this, preferences, plugin.watchers, force = true)
             EversenseLogger.info(TAG, "365 transmitter ready — notifying watchers")
             handler.post { plugin.watchers.forEach { it.onTransmitterReady() } }
 

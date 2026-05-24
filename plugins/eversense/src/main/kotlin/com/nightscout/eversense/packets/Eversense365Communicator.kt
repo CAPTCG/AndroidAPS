@@ -1,4 +1,4 @@
-package com.nightscout.eversense.packets
+﻿package com.nightscout.eversense.packets
 
 import android.content.SharedPreferences
 import android.os.Handler
@@ -116,7 +116,14 @@ class Eversense365Communicator {
             }
         }
 
-        fun fullSync(gatt: EversenseGattCallback, preferences: SharedPreferences, watchers: List<EversenseWatcher>) {
+        fun fullSync(gatt: EversenseGattCallback, preferences: SharedPreferences, watchers: List<EversenseWatcher>, force: Boolean = false) {
+            val stateJsonCheck = preferences.getString(StorageKeys.STATE, null) ?: "{}"
+            val stateCheck = JSON.decodeFromString<EversenseState>(stateJsonCheck)
+            val fourMinAgo = System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(240)
+            if (!force && stateCheck.lastSync > fourMinAgo) {
+                EversenseLogger.debug(TAG, "365 fullSync skipped — last sync was recent (${(System.currentTimeMillis() - stateCheck.lastSync) / 1000}s ago)")
+                return
+            }
             try {
                 val stateJson = preferences.getString(StorageKeys.STATE, null) ?: "{}"
                 val state = JSON.decodeFromString<EversenseState>(stateJson)

@@ -1,4 +1,4 @@
-package com.nightscout.eversense
+﻿package com.nightscout.eversense
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
@@ -321,7 +321,7 @@ class EversenseCGMPlugin {
         }
         EversenseLogger.info(TAG, "Triggering full sync on user request")
         if (gattCallback.is365()) {
-            Eversense365Communicator.fullSync(gattCallback, preferences, watchers.toList())
+            Eversense365Communicator.fullSync(gattCallback, preferences, watchers.toList(), force)
             Eversense365Communicator.readGlucose(gattCallback, preferences, watchers.toList())
         } else {
             EversenseE3Communicator.fullSync(gattCallback, preferences, watchers.toList(), force)
