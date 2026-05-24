@@ -44,7 +44,7 @@ class GetCalibrationInfoPacket : EversenseBasePacket() {
         EversenseLogger.info("GetCalibrationInfoPacket", "Raw calibration readiness byte: $rawReadiness (0x${rawReadiness.toString(16)})")
         return Response(
             currentPhase = CalibrationPhase.from365(receivedData[2].toInt(), calPerDay),
-            calibrationReadiness = CalibrationReadiness.from(rawReadiness),
+            calibrationReadiness = CalibrationReadiness.from365(rawReadiness),
             calibrationMode = CalibrationMode.from365(calPerDay),
             nextCalibration = receivedData.copyOfRange(4, 12).toUnix(),
             lastCalibration = receivedData.copyOfRange(34, 42).toUnix(),

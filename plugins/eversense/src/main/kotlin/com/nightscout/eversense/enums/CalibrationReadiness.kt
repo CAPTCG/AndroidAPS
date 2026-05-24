@@ -1,4 +1,4 @@
-package com.nightscout.eversense.enums
+﻿package com.nightscout.eversense.enums
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -8,51 +8,41 @@ enum class CalibrationReadiness(private val value: Int) {
     /** Calibration can be accepted */
     @SerialName("READY")
     READY(0x00),
-
     /** Transmitter does not have enough data to do a calibration */
     @SerialName("NOT_ENOUGH_DATA")
     NOT_ENOUGH_DATA(0x01),
-
     /** Glucose rate of change is too high to calibrate */
     @SerialName("GLUCOSE_RATE_TOO_HIGH")
     GLUCOSE_RATE_TOO_HIGH(0x02),
-
     /** A calibration has already been done in the past 2h */
     @SerialName("TOO_SOON")
     TOO_SOON(0x03),
-
     /** Transmitter is in Dropout phase */
     @SerialName("DROPOUT_PHASE")
     DROPOUT_PHASE(0x04),
-
     /** Implant is in EOL */
     @SerialName("SENSOR_EOL")
     SENSOR_EOL(0x05),
-
     /** No implant is linked to transmitter */
     @SerialName("NO_SENSOR_LINKED")
     NO_SENSOR_LINKED(0x06),
-
     /** Transmitter is in unsupported state */
     @SerialName("UNSUPPORTED_MODE")
     UNSUPPORTED_MODE(0x07),
-
     /** Transmitter is in post-calibration waiting period */
     @SerialName("WAITING_POST_CALIBRATION")
     WAITING_POST_CALIBRATION(0x08),
-
     /** Transmitter disconnect detected */
     @SerialName("LED_DISCONNECT_DETECTED")
     LED_DISCONNECT_DETECTED(0x09),
-
     /** Transmitter is in EOL */
     @SerialName("TRANSMITTER_EOL")
     TRANSMITTER_EOL(0x0A),
-
     @SerialName("REASON_UNKNOWN")
     REASON_UNKNOWN(0xFF);
 
     companion object {
+        // E3 mapping — raw byte from register 0x040C
         fun from(value: Int): CalibrationReadiness {
             return when(value) {
                 0 -> READY
@@ -66,6 +56,25 @@ enum class CalibrationReadiness(private val value: Int) {
                 8 -> WAITING_POST_CALIBRATION
                 9 -> LED_DISCONNECT_DETECTED
                 10 -> TRANSMITTER_EOL
+                else -> REASON_UNKNOWN
+            }
+        }
+
+        // E365 mapping — raw byte from GetCalibrationInfoPacket receivedData[3]
+        // The E365 uses a different encoding: 0x06 means READY for calibration.
+        fun from365(value: Int): CalibrationReadiness {
+            return when(value) {
+                0x06 -> READY
+                0x00 -> NOT_ENOUGH_DATA
+                0x01 -> GLUCOSE_RATE_TOO_HIGH
+                0x02 -> TOO_SOON
+                0x03 -> DROPOUT_PHASE
+                0x04 -> SENSOR_EOL
+                0x05 -> NO_SENSOR_LINKED
+                0x07 -> UNSUPPORTED_MODE
+                0x08 -> WAITING_POST_CALIBRATION
+                0x09 -> LED_DISCONNECT_DETECTED
+                0x0A -> TRANSMITTER_EOL
                 else -> REASON_UNKNOWN
             }
         }
