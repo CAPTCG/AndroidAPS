@@ -170,10 +170,9 @@ class EversenseE3Communicator {
                     EversenseLogger.info(TAG, "Battery raw register value: ${batteryRaw.percentage}")
                     state.batteryPercentage = when (batteryRaw.percentage) {
                         0 -> 0
-                        1 -> 10
-                        2 -> 35
-                        3 -> 65
-                        4 -> 100
+                        1 -> 35
+                        2 -> 65
+                        3 -> 100
                         else -> batteryRaw.percentage
                     }
                     EversenseLogger.info(TAG, "Battery percentage mapped: ${state.batteryPercentage}%")
