@@ -161,12 +161,28 @@ class EversenseE3Communicator {
                     gatt.writePacket<SetCurrentDatetimePacket.Response>(SetCurrentDatetimePacket())
                 }
 
-                // The E3 battery register returns a raw percentage (0-100) directly.
+                // The E3 battery register returns an enum index (0-11) mapped to display percentages.
+                // Mapping sourced from official Eversense app BATTERY_LEVEL enum (fromStrength).
                 try {
                     EversenseLogger.debug(TAG, "Reading battery percentage...")
                     val batteryRaw = gatt.writePacket<GetBatteryPercentagePacket.Response>(GetBatteryPercentagePacket())
-                    EversenseLogger.info(TAG, "Battery raw register value: ${batteryRaw.percentage}%")
-                    state.batteryPercentage = batteryRaw.percentage
+                    EversenseLogger.info(TAG, "Battery raw register value: ${batteryRaw.percentage}")
+                    state.batteryPercentage = when (batteryRaw.percentage) {
+                        0  -> 0
+                        1  -> 5
+                        2  -> 10
+                        3  -> 25
+                        4  -> 35
+                        5  -> 45
+                        6  -> 55
+                        7  -> 65
+                        8  -> 75
+                        9  -> 85
+                        10 -> 95
+                        11 -> 100
+                        else -> batteryRaw.percentage
+                    }
+                    EversenseLogger.info(TAG, "Battery percentage mapped: ${state.batteryPercentage}%")
                 } catch (e: Exception) {
                     EversenseLogger.warning(TAG, "Battery read failed (non-fatal): $e")
                 }

@@ -20,9 +20,9 @@ class GetBatteryPercentagePacket : EversenseBasePacket() {
         if (receivedData.isEmpty()) {
             return null
         }
-        // The E3 battery register returns a raw percentage (0-100) directly.
+        // The E3 battery register returns an enum index (0-11). Clamp to valid range.
         val raw = receivedData[getStartIndex()].toInt() and 0xFF
-        val percentage = raw.coerceIn(0, 100)
+        val percentage = raw.coerceIn(0, 11)
         return Response(percentage = percentage)
     }
 
