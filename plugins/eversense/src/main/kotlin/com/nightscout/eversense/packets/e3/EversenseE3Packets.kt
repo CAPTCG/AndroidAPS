@@ -1,4 +1,4 @@
-package com.nightscout.eversense.packets.e3
+﻿package com.nightscout.eversense.packets.e3
 
 class EversenseE3Packets {
     companion object {
@@ -113,11 +113,15 @@ class EversenseE3Packets {
             // GlucoseLevelAlarmPush (0x40), GlucoseLevelAlertPush (0x41),
             // RateAndPredictiveAlertPush (0x42) are glucose push notifications
             // that the transmitter sends unsolicited after calibration or alarm events.
-            // Treat them all as Keep Alive equivalents so they trigger readGlucose.
+            // TransmitterBatteryPush (0x47) and SensorReadAlertPush (0x49) are also
+            // push packets — without them AAPS would wait up to 100s for KeepAlive
+            // instead of reacting immediately to the real-time glucose push.
             return data == KeepAlivePush ||
                    data == GlucoseLevelAlarmPush ||
-                   data == 65.toByte() || // GlucoseLevelAlertPush (0x41)
-                   data == 66.toByte()    // RateAndPredictiveAlertPush (0x42)
+                   data == GlucoseLevelAlertPush ||
+                   data == RateAndPredictiveAlertPush ||
+                   data == TransmitterBatteryPush ||
+                   data == SensorReadAlertPush
         }
 
         fun isErrorPacket(data: Byte): Boolean {

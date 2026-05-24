@@ -372,12 +372,6 @@ class EversenseGattCallback(
             }
         }
 
-        // Handle TransmitterBatteryPush (0x47) — log raw bytes to determine packet format
-        if (!is365() && data[0] == EversenseE3Packets.TransmitterBatteryPush) {
-            @OptIn(ExperimentalStdlibApi::class)
-            EversenseLogger.info(TAG, "TransmitterBatteryPush received — raw: ${data.toHexString()}, bytes: ${data.map { it.toInt() and 0xFF }}")
-            return
-        }
         if (!is365() && EversenseE3Packets.isPushPacket(data[0])) {
             EversenseLogger.debug(TAG, "Keep Alive packet received (E3)!")
             bleExecutor.submit {
