@@ -60,23 +60,10 @@ enum class CalibrationReadiness(private val value: Int) {
             }
         }
 
-        // E365 mapping — raw byte from GetCalibrationInfoPacket receivedData[3]
-        // The E365 uses a different encoding: 0x06 means READY for calibration.
+        // E365 mapping — the official E365 app does not expose calibration readiness.
+        // Always return READY so calibration submission is not blocked.
         fun from365(value: Int): CalibrationReadiness {
-            return when(value) {
-                0x06 -> READY
-                0x00 -> NOT_ENOUGH_DATA
-                0x01 -> GLUCOSE_RATE_TOO_HIGH
-                0x02 -> TOO_SOON
-                0x03 -> DROPOUT_PHASE
-                0x04 -> SENSOR_EOL
-                0x05 -> NO_SENSOR_LINKED
-                0x07 -> UNSUPPORTED_MODE
-                0x08 -> WAITING_POST_CALIBRATION
-                0x09 -> LED_DISCONNECT_DETECTED
-                0x0A -> TRANSMITTER_EOL
-                else -> REASON_UNKNOWN
-            }
+            return READY
         }
     }
 }
