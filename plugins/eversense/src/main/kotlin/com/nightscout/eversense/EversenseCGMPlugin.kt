@@ -79,14 +79,11 @@ class EversenseCGMPlugin {
             return
         }
         scanner = EversenseScanner(callback)
-        // Scan without service UUID filter — Eversense transmitters may not always advertise
-        // the service UUID before pairing. Show all BLE devices so user can identify their transmitter.
         val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
         bluetoothScanner.startScan(null, settings, scanner)
         EversenseLogger.info(TAG, "BLE scan started")
     }
 
-    // FIX 4: Added public stopScan() so callers can cancel scanning independently.
     @SuppressLint("MissingPermission")
     fun stopScan() {
         val bluetoothScanner = bluetoothManager?.adapter?.bluetoothLeScanner ?: run {
@@ -100,8 +97,6 @@ class EversenseCGMPlugin {
         } ?: EversenseLogger.info(TAG, "stopScan called but no active scan found")
     }
 
-    // FIX 5: connect() now explicitly differentiates between supplied device vs stored device.
-    // FIX 6: Synchronized block prevents race condition on connection state check.
     @SuppressLint("MissingPermission")
     fun connect(device: BluetoothDevice? = null): Boolean {
         val bluetoothManager = this.bluetoothManager ?: run {
@@ -121,12 +116,10 @@ class EversenseCGMPlugin {
                 return true
             }
 
-            // Clean up stale GATT connections before connecting
             gattCallback.cleanUp()
 
             return if (device != null) {
                 EversenseLogger.info(TAG, "Connecting to supplied device: ${device.name}")
-                // Save address so we can auto-reconnect after app restart or phone reboot
                 preferences?.edit()?.putString(StorageKeys.REMOTE_DEVICE_KEY, device.address)?.apply()
                 EversenseLogger.info(TAG, "Saved device address for auto-reconnect: ${device.address}")
                 device.connectGatt(context, true, gattCallback, android.bluetooth.BluetoothDevice.TRANSPORT_LE)
@@ -147,7 +140,6 @@ class EversenseCGMPlugin {
         }
     }
 
-    // FIX 7: Added disconnect() which calls both disconnect() and close() on the GATT client.
     fun clearStoredDevice() {
         preferences?.edit()?.remove(StorageKeys.REMOTE_DEVICE_KEY)?.apply()
         EversenseLogger.info(TAG, "Cleared stored device address")
@@ -166,19 +158,7 @@ class EversenseCGMPlugin {
         EversenseLogger.info(TAG, "Disconnected from transmitter")
     }
 
-    // writeSettings delegates to EversenseE3Communicator. Transmitter type (E3 vs 365) is
-    // determined at GATT connection time via EversenseSecurityType, not stored in EversenseState.
-    /**
-     * Enable or disable diagnostic mode on the transmitter.
-     * Ported from iOS PlacementGuideViewModel which calls setDiagnosticMode(true)
-     * on init and setDiagnosticMode(false) in stop(). Diagnostic mode increases
-     * signal-strength update frequency to ~500ms for accurate placement feedback.
-     * Must be called from a background thread as it performs a BLE write.
-     */
     fun setDiagnosticMode(isEnabled: Boolean) {
-        // Diagnostic mode increases signal-strength update frequency for placement guide.
-        // E3 uses Enter/ExitDiagnosticMode commands.
-        // 365 uses Operation packets with enter/exit operation IDs.
         if (gattCallback?.isConnected() != true) {
             EversenseLogger.warning(TAG, "Cannot set diagnostic mode — not connected")
             return
@@ -220,7 +200,6 @@ class EversenseCGMPlugin {
         return EversenseE3Communicator.writeSettings(gattCallback, preferences, settings)
     }
 
-
     // Send a blood glucose calibration value to the transmitter.
     // Requires CalibrationReadiness.READY state and an active connection.
     // Returns true if the packet was sent successfully, false otherwise.
@@ -255,7 +234,7 @@ class EversenseCGMPlugin {
                 }
             }
             future.get(20000, java.util.concurrent.TimeUnit.MILLISECONDS)
-            // Update lastCalibrationDate immediately after successful submission.
+            // Update state immediately after successful calibration submission.
             // The flash register reads for calibration dates fail on E3 firmware 6.04,
             // so we update the state locally to reflect the calibration just submitted.
             val prefs = preferences ?: return true
@@ -263,10 +242,11 @@ class EversenseCGMPlugin {
             val updatedState = JSON.decodeFromString<com.nightscout.eversense.models.EversenseState>(stateJson)
             updatedState.lastCalibrationDate = timestampMs
             updatedState.nextCalibrationDate = timestampMs + 24 * 60 * 60 * 1000L // +24 hours
+            updatedState.calibrationReadiness = com.nightscout.eversense.enums.CalibrationReadiness.WAITING_POST_CALIBRATION
             prefs.edit(commit = true) {
                 putString(com.nightscout.eversense.util.StorageKeys.STATE, JSON.encodeToString(updatedState))
             }
-            EversenseLogger.info(TAG, "Updated lastCalibrationDate to $timestampMs after successful calibration")
+            EversenseLogger.info(TAG, "Updated calibration state: lastCalibrationDate=$timestampMs, readiness=WAITING_POST_CALIBRATION")
             true
         } catch (e: Exception) {
             EversenseLogger.error(TAG, "Failed to send calibration: $e")
@@ -274,9 +254,7 @@ class EversenseCGMPlugin {
         }
     }
 
-
     // Triggers both a full sync and a glucose read on the connected transmitter.
-    // Should be called from a background thread (ioScope).
     // Submit fullSync to the bleExecutor so it runs on the same thread as BLE callbacks.
     // This prevents races between fullSync and handleCharacteristicChanged/writePacket.
     // Called from onConnectionChanged to run immediately on connect without waiting for Keep Alive.
@@ -327,7 +305,6 @@ class EversenseCGMPlugin {
             EversenseE3Communicator.fullSync(gattCallback, preferences, watchers.toList(), force)
             EversenseE3Communicator.readGlucose(gattCallback, preferences, watchers.toList())
         }
-        // Update placement signal after sync
         gattCallback.readRssi()
     }
 
@@ -343,10 +320,6 @@ class EversenseCGMPlugin {
         watchers.forEach { it.onStateChanged(state) }
     }
 
-
-    // Read transmitter-to-sensor signal strength.
-    // Tries the Eversense 365 ReadSignalStrength packet first.
-    // Falls back to BLE RSSI for E3 transmitters which don't support the packet.
     fun readSignalStrength() {
         val gattCallback = this.gattCallback ?: run { EversenseLogger.error(TAG, "Cannot read signal strength — no gattCallback"); return }
         val preferences = this.preferences ?: run { EversenseLogger.error(TAG, "Cannot read signal strength — no preferences"); return }
@@ -372,7 +345,7 @@ class EversenseCGMPlugin {
         }
     }
 
-        private fun rssiToStrength(rssi: Int): Int = when {
+    private fun rssiToStrength(rssi: Int): Int = when {
         rssi == 0   -> 0
         rssi >= -65 -> 100
         rssi >= -75 -> 80
@@ -381,7 +354,7 @@ class EversenseCGMPlugin {
         else        -> 20
     }
 
-        fun readRssi() {
+    fun readRssi() {
         gattCallback?.readRssi()
     }
 
@@ -396,12 +369,3 @@ class EversenseCGMPlugin {
         }
     }
 }
-
-
-
-
-
-
-
-
-
