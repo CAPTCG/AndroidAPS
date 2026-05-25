@@ -19,6 +19,7 @@ import com.nightscout.eversense.packets.e3.EnterDiagnosticModePacket
 import com.nightscout.eversense.packets.e3.ExitDiagnosticModePacket
 import com.nightscout.eversense.packets.e365.EnterDiagnosticMode365Packet
 import com.nightscout.eversense.packets.e365.ExitDiagnosticMode365Packet
+import com.nightscout.eversense.packets.e3.GetCalibrationReadinessPacket
 import com.nightscout.eversense.packets.e3.GetSignalStrengthRawPacket
 import com.nightscout.eversense.util.EversenseLogger
 import com.nightscout.eversense.util.EversenseScanner
@@ -234,9 +235,8 @@ class EversenseCGMPlugin {
                 }
             }
             future.get(20000, java.util.concurrent.TimeUnit.MILLISECONDS)
+
             // Update state immediately after successful calibration submission.
-            // The flash register reads for calibration dates fail on E3 firmware 6.04,
-            // so we update the state locally to reflect the calibration just submitted.
             val prefs = preferences ?: return true
             val stateJson = prefs.getString(com.nightscout.eversense.util.StorageKeys.STATE, null) ?: "{}"
             val updatedState = JSON.decodeFromString<com.nightscout.eversense.models.EversenseState>(stateJson)
@@ -247,12 +247,36 @@ class EversenseCGMPlugin {
                 putString(com.nightscout.eversense.util.StorageKeys.STATE, JSON.encodeToString(updatedState))
             }
             EversenseLogger.info(TAG, "Updated calibration state: lastCalibrationDate=$timestampMs, readiness=WAITING_POST_CALIBRATION")
+
+            // For E3: immediately re-read calibration readiness from the transmitter on the
+            // bleExecutor — matching the official app's postReadyForCalibration() call after
+            // calibration submission. The transmitter will have updated the register to
+            // WAITING_POST_CALIBRATION (id=8) by the time the read completes.
+            if (!gattCallback.is365()) {
+                gattCallback.submitToExecutor {
+                    try {
+                        val readinessResponse = gattCallback.writePacket<GetCalibrationReadinessPacket.Response>(GetCalibrationReadinessPacket())
+                        val currentStateJson = prefs.getString(com.nightscout.eversense.util.StorageKeys.STATE, null) ?: "{}"
+                        val currentState = JSON.decodeFromString<com.nightscout.eversense.models.EversenseState>(currentStateJson)
+                        currentState.calibrationReadiness = readinessResponse.readiness
+                        prefs.edit(commit = true) {
+                            putString(com.nightscout.eversense.util.StorageKeys.STATE, JSON.encodeToString(currentState))
+                        }
+                        EversenseLogger.info(TAG, "Post-calibration readiness re-read: ${readinessResponse.readiness}")
+                        watchers.forEach { it.onStateChanged(currentState) }
+                    } catch (e: Exception) {
+                        EversenseLogger.warning(TAG, "Post-calibration readiness re-read failed (non-fatal): $e")
+                    }
+                }
+            }
+
             true
         } catch (e: Exception) {
             EversenseLogger.error(TAG, "Failed to send calibration: $e")
             false
         }
     }
+
 
     // Triggers both a full sync and a glucose read on the connected transmitter.
     // Submit fullSync to the bleExecutor so it runs on the same thread as BLE callbacks.
