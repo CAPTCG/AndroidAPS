@@ -144,7 +144,8 @@ class CustomWatchface : BaseWatchFace() {
             binding.tempTarget.setTextColor(tempTargetColor(0))
         if ((ViewMap.RESERVOIR.dynData?.stepFontColor ?: 0) <= 0)
             binding.reservoir.setTextColor(reservoirColor(0))
-        binding.sgv.setTextColor(bgColor(0))
+        if ((ViewMap.SGV.dynData?.stepFontColor ?: 0) <= 0)
+            binding.sgv.setTextColor(bgColor(0))
         if ((ViewMap.DIRECTION.dynData?.stepColor ?: 0) <= 0)
             binding.direction.colorFilter = changeDrawableColor(bgColor(0))
         if (ageLevel() != 1 && (ViewMap.TIMESTAMP.dynData?.stepFontColor ?: 0) <= 0)
@@ -162,7 +163,8 @@ class CustomWatchface : BaseWatchFace() {
             binding.tempTargetExt1.setTextColor(tempTargetColor(1))
         if ((ViewMap.RESERVOIR_EXT1.dynData?.stepFontColor ?: 0) <= 0)
             binding.reservoirExt1.setTextColor(reservoirColor(1))
-        binding.sgvExt1.setTextColor(bgColor(1))
+        if ((ViewMap.SGV_EXT1.dynData?.stepFontColor ?: 0) <= 0)
+            binding.sgvExt1.setTextColor(bgColor(1))
         if ((ViewMap.DIRECTION_EXT1.dynData?.stepColor ?: 0) <= 0)
             binding.directionExt1.colorFilter = changeDrawableColor(bgColor(1))
         if (ageLevel(id = 1) != 1 && (ViewMap.TIMESTAMP_EXT1.dynData?.stepFontColor ?: 0) <= 0)
@@ -178,7 +180,8 @@ class CustomWatchface : BaseWatchFace() {
             binding.tempTargetExt2.setTextColor(tempTargetColor(2))
         if ((ViewMap.RESERVOIR_EXT2.dynData?.stepFontColor ?: 0) <= 0)
             binding.reservoirExt2.setTextColor(reservoirColor(2))
-        binding.sgvExt2.setTextColor(bgColor(2))
+        if ((ViewMap.SGV_EXT2.dynData?.stepFontColor ?: 0) <= 0)
+            binding.sgvExt2.setTextColor(bgColor(2))
         if ((ViewMap.DIRECTION_EXT2.dynData?.stepColor ?: 0) <= 0)
             binding.directionExt2.colorFilter = changeDrawableColor(bgColor(2))
         if (ageLevel(id = 2) != 1 && (ViewMap.TIMESTAMP_EXT2.dynData?.stepFontColor ?: 0) <= 0)
@@ -659,15 +662,7 @@ class CustomWatchface : BaseWatchFace() {
                     FontMap.font(viewJson.optString(JsonKeys.FONT.key, FontMap.DEFAULT.key)),
                     StyleMap.style(viewJson.optString(JsonKeys.FONTSTYLE.key, StyleMap.NORMAL.key))
                 )
-                val sgvDataSet = when (key) { "sgv_Ext1" -> 1; "sgv_Ext2" -> 2; else -> -1 }.let { ds ->
-                    if (ds == -1 && key == "sgv") 0 else ds
-                }
-                val sgvInRangeColor = if (sgvDataSet >= 0 && cwf.singleBg[sgvDataSet].sgvLevel == 0L) cwf.midColor else null
-                view.setTextColor(
-                    sgvInRangeColor
-                        ?: dynData?.getFontColorStep(cwf)
-                        ?: cwf.getColor(viewJson.optString(JsonKeys.FONTCOLOR.key))
-                )
+                view.setTextColor(dynData?.getFontColorStep(cwf) ?: cwf.getColor(viewJson.optString(JsonKeys.FONTCOLOR.key)))
                 view.isAllCaps = viewJson.optBoolean(JsonKeys.ALLCAPS.key)
                 if (viewJson.has(JsonKeys.TEXTVALUE.key) || viewJson.has(JsonKeys.DYNVALUE.key) || (dynData?.stepTextValue ?: 0) > 0) {
                     if (viewJson.has(JsonKeys.DYNVALUE.key)) {
