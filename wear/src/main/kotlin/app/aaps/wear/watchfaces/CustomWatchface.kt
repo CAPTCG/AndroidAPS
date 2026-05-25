@@ -72,7 +72,7 @@ class CustomWatchface : BaseWatchFace() {
     private var json = JSONObject()
     private var jsonString = ""
 
-    private fun bgColor(dataSet: Int): Int = when (singleBg[dataSet].sgvLevel) {
+    internal fun bgColor(dataSet: Int): Int = when (singleBg[dataSet].sgvLevel) {
         1L   -> highColor
         0L   -> midColor
         -1L  -> lowColor
@@ -144,8 +144,7 @@ class CustomWatchface : BaseWatchFace() {
             binding.tempTarget.setTextColor(tempTargetColor(0))
         if ((ViewMap.RESERVOIR.dynData?.stepFontColor ?: 0) <= 0)
             binding.reservoir.setTextColor(reservoirColor(0))
-        if ((ViewMap.SGV.dynData?.stepFontColor ?: 0) <= 0)
-            binding.sgv.setTextColor(bgColor(0))
+        binding.sgv.setTextColor(bgColor(0))
         if ((ViewMap.DIRECTION.dynData?.stepColor ?: 0) <= 0)
             binding.direction.colorFilter = changeDrawableColor(bgColor(0))
         if (ageLevel() != 1 && (ViewMap.TIMESTAMP.dynData?.stepFontColor ?: 0) <= 0)
@@ -163,8 +162,7 @@ class CustomWatchface : BaseWatchFace() {
             binding.tempTargetExt1.setTextColor(tempTargetColor(1))
         if ((ViewMap.RESERVOIR_EXT1.dynData?.stepFontColor ?: 0) <= 0)
             binding.reservoirExt1.setTextColor(reservoirColor(1))
-        if ((ViewMap.SGV_EXT1.dynData?.stepFontColor ?: 0) <= 0)
-            binding.sgvExt1.setTextColor(bgColor(1))
+        binding.sgvExt1.setTextColor(bgColor(1))
         if ((ViewMap.DIRECTION_EXT1.dynData?.stepColor ?: 0) <= 0)
             binding.directionExt1.colorFilter = changeDrawableColor(bgColor(1))
         if (ageLevel(id = 1) != 1 && (ViewMap.TIMESTAMP_EXT1.dynData?.stepFontColor ?: 0) <= 0)
@@ -180,8 +178,7 @@ class CustomWatchface : BaseWatchFace() {
             binding.tempTargetExt2.setTextColor(tempTargetColor(2))
         if ((ViewMap.RESERVOIR_EXT2.dynData?.stepFontColor ?: 0) <= 0)
             binding.reservoirExt2.setTextColor(reservoirColor(2))
-        if ((ViewMap.SGV_EXT2.dynData?.stepFontColor ?: 0) <= 0)
-            binding.sgvExt2.setTextColor(bgColor(2))
+        binding.sgvExt2.setTextColor(bgColor(2))
         if ((ViewMap.DIRECTION_EXT2.dynData?.stepColor ?: 0) <= 0)
             binding.directionExt2.colorFilter = changeDrawableColor(bgColor(2))
         if (ageLevel(id = 2) != 1 && (ViewMap.TIMESTAMP_EXT2.dynData?.stepFontColor ?: 0) <= 0)
@@ -193,6 +190,10 @@ class CustomWatchface : BaseWatchFace() {
                 else -> binding.loopExt2.setBackgroundResource(R.drawable.loop_red_25)
             }
         //******************************
+        // Final BG color enforcement - always overrides any dynData/complication/JSON white
+        binding.sgv.setTextColor(bgColor(0))
+        binding.sgvExt1.setTextColor(bgColor(1))
+        binding.sgvExt2.setTextColor(bgColor(2))
         setupCharts()
     }
 
@@ -662,7 +663,10 @@ class CustomWatchface : BaseWatchFace() {
                     FontMap.font(viewJson.optString(JsonKeys.FONT.key, FontMap.DEFAULT.key)),
                     StyleMap.style(viewJson.optString(JsonKeys.FONTSTYLE.key, StyleMap.NORMAL.key))
                 )
-                view.setTextColor(dynData?.getFontColorStep(cwf) ?: cwf.getColor(viewJson.optString(JsonKeys.FONTCOLOR.key)))
+                val resolvedColor = dynData?.getFontColorStep(cwf) ?: cwf.getColor(viewJson.optString(JsonKeys.FONTCOLOR.key))
+                val isSgvView = this == ViewMap.SGV || this == ViewMap.SGV_EXT1 || this == ViewMap.SGV_EXT2
+                val dataSet = when (this) { ViewMap.SGV_EXT1 -> 1; ViewMap.SGV_EXT2 -> 2; else -> 0 }
+                view.setTextColor(if (isSgvView && resolvedColor == android.graphics.Color.WHITE) cwf.bgColor(dataSet) else resolvedColor)
                 view.isAllCaps = viewJson.optBoolean(JsonKeys.ALLCAPS.key)
                 if (viewJson.has(JsonKeys.TEXTVALUE.key) || viewJson.has(JsonKeys.DYNVALUE.key) || (dynData?.stepTextValue ?: 0) > 0) {
                     if (viewJson.has(JsonKeys.DYNVALUE.key)) {
