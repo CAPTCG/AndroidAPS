@@ -375,6 +375,22 @@ class EversenseGattCallback(
         if (!is365() && EversenseE3Packets.isPushPacket(data[0])) {
             EversenseLogger.debug(TAG, "Keep Alive packet received (E3)!")
             bleExecutor.submit {
+                // Sync transmitter clock before reading glucose so the glucose timestamp
+                // reflects phone time, not the drifted transmitter clock. The official app
+                // always calls postCurrentDateTimeRequest before postReadSensorGlucose.
+                try {
+                    val currentDatetime = writePacket<com.nightscout.eversense.packets.e3.GetCurrentDatetimePacket.Response>(
+                        com.nightscout.eversense.packets.e3.GetCurrentDatetimePacket()
+                    )
+                    if (currentDatetime.needsTimeSync) {
+                        EversenseLogger.info(TAG, "Clock drift detected before glucose read — syncing transmitter clock")
+                        writePacket<com.nightscout.eversense.packets.e3.SetCurrentDatetimePacket.Response>(
+                            com.nightscout.eversense.packets.e3.SetCurrentDatetimePacket()
+                        )
+                    }
+                } catch (e: Exception) {
+                    EversenseLogger.warning(TAG, "Pre-glucose clock sync failed (non-fatal): $e")
+                }
                 EversenseE3Communicator.readGlucose(this, preferences, plugin.watchers)
                 EversenseE3Communicator.fullSync(this, preferences, plugin.watchers)
             }
