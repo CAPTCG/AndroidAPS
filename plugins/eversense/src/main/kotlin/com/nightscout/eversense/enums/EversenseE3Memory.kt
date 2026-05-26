@@ -2,7 +2,7 @@
 
 enum class EversenseE3Memory(private val address: Long) {
     BatteryPercentage(0x0000_0406),
-    CalibrationReadiness(0x0000_040C),
+    CalibrationReadiness(0x0000_0137),
     NextCalibrationDate(0x0000_0470),
     NextCalibrationTime(0x0000_0472),
     IsOneCalibration(0x0000_0496),
@@ -30,7 +30,7 @@ enum class EversenseE3Memory(private val address: Long) {
     SensorFieldCurrentRaw(0x0000_0874),
     TransmitterSoftwareVersion(0x0000_000A),
     TransmitterSoftwareVersionExt(0x0000_00A2),
-    MmaFeatures(0x0000_0137),
+    MmaFeatures(0x0000_040C),
     AppVersion(0x0000_0B4B),
     BleDisconnect(0x0000_08B2),
     HighGlucoseAlarmRepeatIntervalDay(0x0000_1033),
