@@ -1,4 +1,4 @@
-﻿∩╗┐package com.nightscout.eversense.packets
+package com.nightscout.eversense.packets
 
 import android.content.SharedPreferences
 import android.os.Handler
