@@ -286,8 +286,8 @@ class CustomWatchface : BaseWatchFace() {
             } catch (_: Exception) {
                 aapsLogger.debug(LTag.WEAR, "Crash during Custom watch load")
                 runBlocking {
-                    complicationDataRepository.storeCustomWatchface(defaultWatchface(true).customWatchfaceData, isDefault = false)
-                } // reload correct values to avoid crash of watchface
+                    complicationDataRepository.setDefaultWatchface()
+                } // reset to stored default without capturing current (possibly white) text colors
             }
         }
     }
