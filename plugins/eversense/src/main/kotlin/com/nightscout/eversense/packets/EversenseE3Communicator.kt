@@ -29,9 +29,7 @@ import com.nightscout.eversense.packets.e3.GetCurrentGlucosePacket
 import com.nightscout.eversense.packets.e3.GetInsertionDatePacket
 import com.nightscout.eversense.packets.e3.GetInsertionTimePacket
 import com.nightscout.eversense.packets.e3.GetLastCalibrationDatePacket
-import com.nightscout.eversense.packets.e3.GetLastCalibrationDateHighPacket
 import com.nightscout.eversense.packets.e3.GetLastCalibrationTimePacket
-import com.nightscout.eversense.packets.e3.GetLastCalibrationTimeHighPacket
 import com.nightscout.eversense.packets.e3.GetNextCalibrationDatePacket
 import com.nightscout.eversense.packets.e3.GetNextCalibrationTimePacket
 import com.nightscout.eversense.packets.e3.GetSettingGlucoseHighEnabled
@@ -64,7 +62,6 @@ import com.nightscout.eversense.packets.e3.SetSettingRateFallingThresholdPacket
 import com.nightscout.eversense.packets.e3.SetSettingRateRisingEnabledPacket
 import com.nightscout.eversense.packets.e3.SetSettingRateRisingThresholdPacket
 import com.nightscout.eversense.packets.e3.SetSettingVibratePacket
-import com.nightscout.eversense.packets.e3.util.EversenseE3Parser
 import com.nightscout.eversense.util.EversenseLogger
 import com.nightscout.eversense.util.StorageKeys
 import kotlinx.serialization.json.Json
@@ -223,21 +220,14 @@ class EversenseE3Communicator {
                     val calibrationReadiness = gatt.writePacket<GetCalibrationReadinessPacket.Response>(GetCalibrationReadinessPacket())
                     val nextCalibrationDate = gatt.writePacket<GetNextCalibrationDatePacket.Response>(GetNextCalibrationDatePacket())
                     val nextCalibrationTime = gatt.writePacket<GetNextCalibrationTimePacket.Response>(GetNextCalibrationTimePacket())
-                    // LastCalibrationDate (0x08A2) and LastCalibrationTime (0x08A4) use
-                    // ReadTwoByte which firmware 6.04 rejects with error 5 for 0x08xx addresses.
-                    // Read each as two ReadSingleByte calls and reconstruct the 2-byte value.
-                    val lastCalibrationDateLow = gatt.writePacket<GetLastCalibrationDatePacket.Response>(GetLastCalibrationDatePacket())
-                    val lastCalibrationDateHigh = gatt.writePacket<GetLastCalibrationDateHighPacket.Response>(GetLastCalibrationDateHighPacket())
-                    val lastCalibrationDateBytes = ubyteArrayOf(lastCalibrationDateLow.lowByte.toUByte(), lastCalibrationDateHigh.highByte.toUByte())
-                    val lastCalibrationTimeLow = gatt.writePacket<GetLastCalibrationTimePacket.Response>(GetLastCalibrationTimePacket())
-                    val lastCalibrationTimeHigh = gatt.writePacket<GetLastCalibrationTimeHighPacket.Response>(GetLastCalibrationTimeHighPacket())
-                    val lastCalibrationTimeBytes = ubyteArrayOf(lastCalibrationTimeLow.lowByte.toUByte(), lastCalibrationTimeHigh.highByte.toUByte())
+                    val lastCalibrationDate = gatt.writePacket<GetLastCalibrationDatePacket.Response>(GetLastCalibrationDatePacket())
+                    val lastCalibrationTime = gatt.writePacket<GetLastCalibrationTimePacket.Response>(GetLastCalibrationTimePacket())
                     state.calibrationPhase = calibrationPhase.phase
                     state.calibrationReadiness = calibrationReadiness.readiness
                     val minCalDate = 1577836800000L  // 2020-01-01
                     val maxCalDate = 1893456000000L  // 2030-01-01
                     val newNextCal = nextCalibrationDate.date + nextCalibrationTime.time
-                    val newLastCal = EversenseE3Parser.readDate(lastCalibrationDateBytes, 0) + EversenseE3Parser.readTime(lastCalibrationTimeBytes, 0)
+                    val newLastCal = lastCalibrationDate.date + lastCalibrationTime.time
                     if (newNextCal in minCalDate..maxCalDate) {
                         state.nextCalibrationDate = newNextCal
                         EversenseLogger.info(TAG, "nextCalibrationDate accepted: $newNextCal")
