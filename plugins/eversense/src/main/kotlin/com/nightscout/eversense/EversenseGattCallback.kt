@@ -1,4 +1,4 @@
-﻿package com.nightscout.eversense
+package com.nightscout.eversense
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
