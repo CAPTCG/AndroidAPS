@@ -11,16 +11,16 @@ import com.nightscout.eversense.packets.EversensePacket
     typeId = 0,
     securityType = EversenseSecurityType.None
 )
-class GetLastCalibrationTimePacket : EversenseBasePacket() {
+class GetLastCalibrationDateHighPacket : EversenseBasePacket() {
 
     override fun getRequestData(): ByteArray {
-        return EversenseE3Memory.LastCalibrationTime.getRequestData()
+        return EversenseE3Memory.LastCalibrationDateHigh.getRequestData()
     }
 
     override fun parseResponse(): Response? {
         if (receivedData.isEmpty()) return null
-        return Response(lowByte = receivedData[getStartIndex()].toInt() and 0xFF)
+        return Response(highByte = receivedData[getStartIndex()].toInt() and 0xFF)
     }
 
-    data class Response(val lowByte: Int) : EversenseBasePacket.Response()
+    data class Response(val highByte: Int) : EversenseBasePacket.Response()
 }
