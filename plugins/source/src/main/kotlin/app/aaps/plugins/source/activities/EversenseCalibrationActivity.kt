@@ -61,16 +61,16 @@ class EversenseCalibrationActivity : AppCompatActivity() {
 
         val bgInput = findViewById<EditText>(R.id.calibration_bg_input)
         bgInput.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
-        bgInput.isEnabled = state?.calibrationReadiness == CalibrationReadiness.READY
+        bgInput.isEnabled = true // Allow submission regardless of readiness — matches official app
 
         val submitButton = findViewById<Button>(R.id.calibration_submit_button)
-        submitButton.isEnabled = state?.calibrationReadiness == CalibrationReadiness.READY
+        submitButton.isEnabled = true // Allow submission regardless of readiness — matches official app
 
         // Live-refresh button and status whenever transmitter state changes while screen is open
         val stateWatcher = object : EversenseWatcher {
             override fun onStateChanged(state: EversenseState) {
                 mainHandler.post {
-                    val ready = state.calibrationReadiness == CalibrationReadiness.READY
+                    val ready = true // Readiness is informational only — matches official app
                     submitButton.isEnabled = ready
                     bgInput.isEnabled = ready
                     statusText.text = readinessMessage(state.calibrationReadiness)
