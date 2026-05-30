@@ -220,10 +220,6 @@ class EversenseCGMPlugin {
             EversenseLogger.error(TAG, "Cannot calibrate: state is null")
             return false
         }
-        if (state.calibrationReadiness != com.nightscout.eversense.enums.CalibrationReadiness.READY) {
-            EversenseLogger.error(TAG, "Transmitter is not ready for calibration: ${state.calibrationReadiness}")
-            return false
-        }
         return try {
             // Submit calibration to bleExecutor so it runs on the same thread as BLE callbacks.
             // Calling writePacket directly from a foreign thread races with Keep Alive cycles
