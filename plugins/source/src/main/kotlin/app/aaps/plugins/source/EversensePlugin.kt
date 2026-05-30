@@ -156,6 +156,8 @@ class EversensePlugin @Inject constructor(
         }
     }
 
+    fun syncCredentialsIfNeeded() = checkCredentialsNotification()
+
     private fun checkCredentialsNotification() {
         val username = preferences.get(EversenseStringKey.EversenseUsername)
         val password = preferences.get(EversenseStringKey.EversensePassword)
@@ -166,6 +168,20 @@ class EversensePlugin @Inject constructor(
                 level = NotificationLevel.URGENT
             )
         } else {
+            // Sync credentials into SECURE_STATE immediately — fixes new phone deadlock
+            // where login fails before first glucose reading so SECURE_STATE never gets populated
+            val secureState = getSecureState()
+            val credentialsChanged = secureState.username != username || secureState.password != password
+            secureState.username = username
+            secureState.password = password
+            saveSecureState(secureState)
+            if (credentialsChanged) {
+                securePrefs.edit(commit = true) {
+                    remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN)
+                    remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN_EXPIRY)
+                }
+                aapsLogger.info(LTag.BGSOURCE, "Eversense: credentials synced to secure state")
+            }
             notificationManager.dismiss(NotificationId.EVERSENSE_CREDENTIALS)
         }
     }
@@ -445,7 +461,21 @@ class EversensePlugin @Inject constructor(
                         }
                         aapsLogger.info(LTag.BGSOURCE, "Eversense: credentials changed — token cache cleared, will re-login on next upload")
                     }
-                    notificationManager.dismiss(NotificationId.EVERSENSE_CREDENTIALS)
+                    // Sync credentials into SECURE_STATE immediately — fixes new phone deadlock
+            // where login fails before first glucose reading so SECURE_STATE never gets populated
+            val secureState = getSecureState()
+            val credentialsChanged = secureState.username != username || secureState.password != password
+            secureState.username = username
+            secureState.password = password
+            saveSecureState(secureState)
+            if (credentialsChanged) {
+                securePrefs.edit(commit = true) {
+                    remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN)
+                    remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN_EXPIRY)
+                }
+                aapsLogger.info(LTag.BGSOURCE, "Eversense: credentials synced to secure state")
+            }
+            notificationManager.dismiss(NotificationId.EVERSENSE_CREDENTIALS)
                 } else {
                     notificationManager.post(
                         NotificationId.EVERSENSE_CREDENTIALS,

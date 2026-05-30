@@ -1,4 +1,4 @@
-package app.aaps.plugins.source.keys
+﻿package app.aaps.plugins.source.keys
 import app.aaps.core.keys.interfaces.BooleanPreferenceKey
 import app.aaps.core.keys.interfaces.StringPreferenceKey
 import app.aaps.plugins.source.R
@@ -30,7 +30,7 @@ enum class EversenseStringKey(
         defaultValue = "",
         titleResId = R.string.eversense_credentials_password,
         summaryResId = R.string.eversense_credentials_not_set,
-        isPassword = true,
+        isPassword = false, // visible — no confirmation dialog
         exportable = true
     )
 }

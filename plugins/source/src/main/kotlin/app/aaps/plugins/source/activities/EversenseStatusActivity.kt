@@ -32,6 +32,14 @@ class EversenseStatusActivity : AppCompatActivity() {
     private val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
     private val eversense get() = EversenseCGMPlugin.instance
 
+    override fun onResume() {
+        super.onResume()
+        // Sync credentials to SECURE_STATE whenever status screen is shown
+        // (catches the case where user just saved credentials in preferences)
+        EversenseCGMPlugin.instance.syncCredentialsIfNeeded()
+        updateStatus()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_eversense_status)
