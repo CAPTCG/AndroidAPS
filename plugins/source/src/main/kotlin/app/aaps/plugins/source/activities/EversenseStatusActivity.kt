@@ -15,6 +15,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import app.aaps.plugins.source.R
 import com.nightscout.eversense.EversenseCGMPlugin
 import com.nightscout.eversense.callbacks.EversenseScanCallback
+import com.nightscout.eversense.callbacks.EversenseWatcher
+import com.nightscout.eversense.models.ActiveAlarm
+import com.nightscout.eversense.models.EversenseState
 import com.nightscout.eversense.models.EversenseScanResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +28,7 @@ import java.util.Date
 import java.util.Locale
 
 @AndroidEntryPoint
-class EversenseStatusActivity : AppCompatActivity() {
+class EversenseStatusActivity : AppCompatActivity(), EversenseWatcher {
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val ioScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -37,8 +40,21 @@ class EversenseStatusActivity : AppCompatActivity() {
         // Sync credentials to SECURE_STATE whenever status screen is shown
         // (catches the case where user just saved credentials in preferences)
         EversenseCGMPlugin.instance.syncCredentialsIfNeeded()
+        eversense.addWatcher(this)
         updateStatus()
     }
+
+    override fun onPause() {
+        super.onPause()
+        eversense.removeWatcher(this)
+    }
+
+    // EversenseWatcher: update button instantly on connection/state change
+    override fun onConnectionChanged(connected: Boolean) { mainHandler.post { updateStatus() } }
+    override fun onStateChanged(state: EversenseState) { mainHandler.post { updateStatus() } }
+    override fun onTransmitterReady() {}
+    override fun onTransmitterNotPlaced() {}
+    override fun onAlarmReceived(alarm: ActiveAlarm) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
