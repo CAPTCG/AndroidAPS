@@ -31,7 +31,6 @@ import com.nightscout.eversense.EversenseCGMPlugin
 import com.nightscout.eversense.callbacks.EversenseScanCallback
 import com.nightscout.eversense.callbacks.EversenseWatcher
 import app.aaps.plugins.source.compose.BgSourceComposeContent
-import com.nightscout.eversense.enums.CalibrationReadiness
 import com.nightscout.eversense.enums.EversenseAlarm
 import com.nightscout.eversense.enums.EversenseType
 import com.nightscout.eversense.models.EversenseCGMResult
