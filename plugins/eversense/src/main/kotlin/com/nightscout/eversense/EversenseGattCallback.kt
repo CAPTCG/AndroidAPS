@@ -627,7 +627,14 @@ val authSession = networkExecutor.submit<Any?> {
 
             EversenseLogger.info(TAG, "365 auth complete — ready for full sync")
             Eversense365Communicator.fullSync(this, preferences, plugin.watchers, force = true)
-            EversenseLogger.info(TAG, "365 transmitter ready — notifying watchers")
+                        // Read glucose immediately after auth so readings don't wait for next Keep Alive
+            // This prevents late readings after reconnect from fullSync disconnect fix
+            try {
+                Eversense365Communicator.readGlucose(this, preferences, plugin.watchers)
+            } catch (e: Exception) {
+                EversenseLogger.warning(TAG, "[365] readGlucose after auth failed (non-fatal): $e")
+            }
+EversenseLogger.info(TAG, "365 transmitter ready — notifying watchers")
             handler.post { plugin.watchers.forEach { it.onTransmitterReady() } }
 
         } catch (exception: Exception) {
