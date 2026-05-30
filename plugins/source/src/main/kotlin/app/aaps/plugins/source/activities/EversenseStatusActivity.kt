@@ -37,9 +37,6 @@ class EversenseStatusActivity : AppCompatActivity(), EversenseWatcher {
 
     override fun onResume() {
         super.onResume()
-        // Sync credentials to SECURE_STATE whenever status screen is shown
-        // (catches the case where user just saved credentials in preferences)
-        EversenseCGMPlugin.instance.syncCredentialsIfNeeded()
         eversense.addWatcher(this)
         updateStatus()
     }
@@ -55,6 +52,7 @@ class EversenseStatusActivity : AppCompatActivity(), EversenseWatcher {
     override fun onTransmitterReady() {}
     override fun onTransmitterNotPlaced() {}
     override fun onAlarmReceived(alarm: ActiveAlarm) {}
+    override fun onCGMRead(type: com.nightscout.eversense.enums.EversenseType, readings: List<com.nightscout.eversense.models.EversenseCGMResult>) {}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
