@@ -341,11 +341,13 @@ class EversensePlugin @Inject constructor(
             )
         }
 
-        // Calibration due notification — fires once per nextCalibrationDate
+        // Calibration due notification — fires once per calibration day
+        // Round to day boundary so clock drift doesn't cause duplicate notifications
+        val calDueDay = (state.nextCalibrationDate / 86400000L) * 86400000L
         if (state.nextCalibrationDate > 0
             && System.currentTimeMillis() >= state.nextCalibrationDate
-            && !isCalibrationDueDismissed(state.nextCalibrationDate)) {
-            setCalibrationDueDismissed(state.nextCalibrationDate)
+            && !isCalibrationDueDismissed(calDueDay)) {
+            setCalibrationDueDismissed(calDueDay)
             notificationManager.post(
                 NotificationId.EVERSENSE_ALARM,
                 "Eversense calibration is due — open AAPS to calibrate your sensor.",
