@@ -641,22 +641,21 @@ EversenseLogger.info(TAG, "365 transmitter ready — notifying watchers")
             EversenseLogger.error(TAG, "[365] authV2 failed: $exception")
             exception.printStackTrace()
 
-            // FIX 12: Track consecutive shortcut failures. After SHORTCUT_FAIL_THRESHOLD
-            // failures, force a full re-auth on the next connection. This recovers from
-            // BLE stack resets (e.g. charger plug-in) that invalidate the session key.
-            // We do NOT immediately disallow on the first failure — transient BLE glitches
-            // often recover on the next attempt without needing internet.
+            // After first successful auth, never call DMS server again.
+            // DMS login only happens on fresh install, app update, or phone reboot
+            // (all of which clear SharedPreferences and reset canUseShortcut to false).
+            // On shortcut failure just log and retry — do NOT fall back to DMS.
             if (cryptoUtil.canUseShortcut()) {
                 shortcutFailCount++
-                EversenseLogger.warning(TAG, "Shortcut auth failed ($shortcutFailCount/$SHORTCUT_FAIL_THRESHOLD)")
+                EversenseLogger.warning(TAG, "Shortcut auth failed () — will retry shortcut on next connect (no DMS re-auth)")
+                // Reset counter after threshold but keep canUseShortcut=true
+                // so DMS is never called again after first successful auth
                 if (shortcutFailCount >= SHORTCUT_FAIL_THRESHOLD) {
-                    EversenseLogger.warning(TAG, "Shortcut fail threshold reached — forcing full re-auth on next connection")
-                    cryptoUtil.disallowUseShortcut()
+                    EversenseLogger.warning(TAG, "Shortcut fail threshold reached — resetting counter, keeping shortcut enabled")
                     shortcutFailCount = 0
                 }
             }
-
-            bluetoothGatt?.disconnect()
+        bluetoothGatt?.disconnect()
         }
     }
 
