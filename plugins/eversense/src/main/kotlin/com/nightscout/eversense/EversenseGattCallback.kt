@@ -1,4 +1,4 @@
-package com.nightscout.eversense
+﻿package com.nightscout.eversense
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothGatt
@@ -560,7 +560,18 @@ class EversenseGattCallback(
                 val whoAmI = writePacket<AuthWhoAmIPacket.Response>(AuthWhoAmIPacket(clientId))
 
                 // Dispatch HTTP work to the network executor and block bleExecutor until complete.
-                val authSession = networkExecutor.submit<Any?> {
+                                // Sync credentials from AAPS layer into SECURE_STATE before login
+                // Guaranteed same-thread write immediately before network call
+                if (plugin.username.isNotEmpty() && plugin.password.isNotEmpty()) {
+                    val stateJson = preferences.getString(com.nightscout.eversense.util.StorageKeys.SECURE_STATE, null) ?: "{}"
+                    val secState = kotlinx.serialization.json.Json.decodeFromString<com.nightscout.eversense.models.EversenseSecureState>(stateJson)
+                    secState.username = plugin.username
+                    secState.password = plugin.password
+                    preferences.edit().putString(com.nightscout.eversense.util.StorageKeys.SECURE_STATE,
+                        kotlinx.serialization.json.Json.encodeToString(com.nightscout.eversense.models.EversenseSecureState.serializer(), secState)).apply()
+                    EversenseLogger.info(TAG, "[365] Credentials synced to SECURE_STATE before login")
+                }
+val authSession = networkExecutor.submit<Any?> {
                     EversenseHttp365Util.login(preferences)
                 }.get() ?: run {
                     bluetoothGatt?.disconnect()

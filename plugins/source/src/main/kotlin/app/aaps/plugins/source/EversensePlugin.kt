@@ -175,6 +175,9 @@ class EversensePlugin @Inject constructor(
             secureState.username = username
             secureState.password = password
             saveSecureState(secureState)
+            // Also set on EversenseCGMPlugin so GattCallback can sync before login
+            eversense.username = username
+            eversense.password = password
             if (credentialsChanged) {
                 securePrefs.edit(commit = true) {
                     remove(com.nightscout.eversense.util.StorageKeys.ACCESS_TOKEN)

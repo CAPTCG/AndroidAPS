@@ -40,6 +40,9 @@ class EversenseCGMPlugin {
 
     private var scanner: EversenseScanner? = null
     var watchers: List<EversenseWatcher> = listOf()
+    // Credentials set by AAPS layer before any login attempt
+    var username: String = ""
+    var password: String = ""
 
     fun setContext(context: Context, loggingEnabled: Boolean) {
         // FIX 1: Always store applicationContext.
