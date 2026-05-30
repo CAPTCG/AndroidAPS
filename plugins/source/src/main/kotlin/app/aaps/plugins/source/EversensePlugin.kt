@@ -132,8 +132,9 @@ class EversensePlugin @Inject constructor(
             aapsLogger.warn(LTag.BGSOURCE, "Bluetooth permissions not granted — requesting permissions")
             requestBluetoothPermissions()
         }
-        // Alert if 365 credentials are missing
-        if (eversense.is365()) checkCredentialsNotification()
+        // Always sync credentials on startup — eversense.is365() is false until first connect
+        // so we must set username/password unconditionally for new phone first-boot
+        checkCredentialsNotification()
     }
 
     override suspend fun onStop() {
