@@ -32,6 +32,7 @@ import dagger.hilt.components.SingletonComponent
 @Suppress("unused")
 abstract class SourceModule {
 <<<<<<< HEAD
+<<<<<<< HEAD
     @ContributesAndroidInjector abstract fun contributesXdripWorker(): XdripSourcePlugin.XdripSourceWorker
     @ContributesAndroidInjector abstract fun contributesDexcomWorker(): DexcomPlugin.DexcomWorker
     @ContributesAndroidInjector abstract fun contributesMM640gWorker(): MM640gPlugin.MM640gWorker
@@ -45,6 +46,8 @@ abstract class SourceModule {
 
     // All BG-source workers migrated to @HiltWorker (constructed by HiltWorkerFactory).
 >>>>>>> upstream/dev
+=======
+>>>>>>> 83d7a21f04 (fix: Remove ContributesAndroidInjector for workers migrated to @HiltWorker upstream)
     @ContributesAndroidInjector abstract fun contributesRequestDexcomPermissionActivity(): RequestDexcomPermissionActivity
     @ContributesAndroidInjector abstract fun contributesEversensePlugin(): EversensePlugin
     @ContributesAndroidInjector abstract fun contributesRequestEversensePermissionActivity(): RequestEversensePermissionActivity
@@ -61,4 +64,5 @@ abstract class SourceModule {
         @Binds fun bindXDrip(xdripSourcePlugin: XdripSourcePlugin): XDripSource
     }
 }
+
 
