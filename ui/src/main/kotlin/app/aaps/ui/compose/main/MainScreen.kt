@@ -434,6 +434,7 @@ fun MainScreen(
             showCalibration = treatmentState.showCalibration,
             showTreatment = treatmentState.showTreatment,
             showInsulin = treatmentState.showInsulin,
+            showAfrezza = treatmentState.showAfrezza,
             showCarbs = treatmentState.showCarbs,
             showCalculator = treatmentState.showCalculator,
             isDexcomSource = treatmentState.isDexcomSource,

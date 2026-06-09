@@ -56,6 +56,7 @@ fun TreatmentBottomSheet(
     showCalibration: Boolean,
     showTreatment: Boolean,
     showInsulin: Boolean,
+    showAfrezza: Boolean,
     showCarbs: Boolean,
     showCalculator: Boolean,
     isDexcomSource: Boolean,
@@ -89,6 +90,7 @@ fun TreatmentBottomSheet(
                 showCalibration = showCalibration,
                 showTreatment = showTreatment,
                 showInsulin = showInsulin,
+                showAfrezza = showAfrezza,
                 showCarbs = showCarbs,
                 showCalculator = showCalculator,
                 isDexcomSource = isDexcomSource,
@@ -108,6 +110,7 @@ private fun TreatmentSelectionContent(
     showCalibration: Boolean,
     showTreatment: Boolean,
     showInsulin: Boolean,
+    showAfrezza: Boolean,
     showCarbs: Boolean,
     showCalculator: Boolean,
     isDexcomSource: Boolean,
@@ -154,6 +157,16 @@ private fun TreatmentSelectionContent(
             val itemEnabled = item.isEnabled
             val itemIcon = when (item.mode) {
                 1    -> IcBolus    // INSULIN
+        // Afrezza
+        if (showAfrezza) {
+            TreatmentItem(
+                elementType = ElementType.AFREZZA,
+                enabled = true,
+                disabledAlpha = disabledAlpha,
+                onDismiss = onDismiss,
+                onClick = { onNavigate(NavigationRequest.Element(ElementType.AFREZZA)) }
+            )
+        }
                 2    -> IcCarbs    // CARBS
                 else -> ElementType.QUICK_WIZARD.icon() // WIZARD
             }
@@ -368,6 +381,7 @@ private fun TreatmentBottomSheetPreview() {
             showCalibration = true,
             showTreatment = true,
             showInsulin = true,
+            showAfrezza = true,
             showCarbs = true,
             showCalculator = true,
             isDexcomSource = false,

@@ -3,6 +3,8 @@ package app.aaps.ui.compose.treatmentsSheet
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.aaps.core.interfaces.insulin.InsulinManager
+import app.aaps.core.interfaces.insulin.InsulinType
 import app.aaps.core.data.iob.InMemoryGlucoseValue
 import app.aaps.core.data.model.RM
 import app.aaps.core.interfaces.aps.Loop
@@ -56,6 +58,7 @@ class TreatmentViewModel @Inject constructor(
     private val rxBus: RxBus,
     private val aapsLogger: AAPSLogger,
     private val dexcomBoyda: DexcomBoyda,
+    private val insulinManager: InsulinManager,
     private val elementAvailability: ElementAvailability
 ) : ViewModel() {
 
@@ -94,6 +97,7 @@ class TreatmentViewModel @Inject constructor(
                 && (elementAvailability.isCalibrationOverrideActive() || preferences.get(BooleanKey.OverviewShowCalibrationButton))
             val showTreatment = preferences.get(BooleanKey.OverviewShowTreatmentButton)
             val showInsulin = preferences.get(BooleanKey.OverviewShowInsulinButton)
+            val showAfrezza = insulinManager.insulins.any { icfg -> icfg.peak == InsulinType.OREF_INHALED_AFREZZA.insulinPeakTime }
             val showCarbs = preferences.get(BooleanKey.OverviewShowCarbsButton)
             val showCalculator = preferences.get(BooleanKey.OverviewShowWizardButton)
 
@@ -105,6 +109,7 @@ class TreatmentViewModel @Inject constructor(
                     showCalibration = showCalibration,
                     showTreatment = showTreatment,
                     showInsulin = showInsulin,
+                    showAfrezza = showAfrezza,
                     showCarbs = showCarbs,
                     showCalculator = showCalculator,
                     isDexcomSource = isDexcomSource,

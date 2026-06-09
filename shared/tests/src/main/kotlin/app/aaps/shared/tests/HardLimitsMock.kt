@@ -35,6 +35,8 @@ class HardLimitsMock @Inject constructor(
         val VERY_HARD_LIMIT_TEMP_TARGET_BG = intArrayOf(72, 200)
         val MIN_DIA = doubleArrayOf(5.0, 5.0, 5.0, 5.0, 5.0)
         val MAX_DIA = doubleArrayOf(9.0, 9.0, 9.0, 9.0, 10.0)
+        val MIN_DIA_INHALED = doubleArrayOf(1.5, 1.5, 1.5, 1.5, 1.5)
+        val MAX_DIA_INHALED = doubleArrayOf(4.0, 4.0, 4.0, 4.0, 4.0)
         const val MIN_PEAK = 35 // mgdl
         const val MAX_PEAK = 120 // mgdl
         val MIN_IC = doubleArrayOf(2.0, 2.0, 2.0, 2.0, 0.3)
@@ -66,6 +68,8 @@ class HardLimitsMock @Inject constructor(
     override fun maxBasal(): Double = MAX_BASAL[loadAge()]
     override fun minDia(): Double = MIN_DIA[loadAge()]
     override fun maxDia(): Double = MAX_DIA[loadAge()]
+    override fun minDiaInhaled(): Double = MIN_DIA_INHALED[loadAge()]
+    override fun maxDiaInhaled(): Double = MAX_DIA_INHALED[loadAge()]
     override fun minPeak(): Int = MIN_PEAK
     override fun maxPeak(): Int = MAX_PEAK
     override fun minIC(): Double = MIN_IC[loadAge()]
